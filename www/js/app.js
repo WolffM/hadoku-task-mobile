@@ -134,17 +134,20 @@ function handleBackToLogin() {
     // Clear stored key (user wants to change it)
     localStorage.removeItem(STORAGE_KEY);
     
-    // Stop loading iframe
-    taskIframe.src = '';
+    // Stop loading iframe and clear it completely
+    taskIframe.src = 'about:blank';
     
-    // Show landing screen
-    landingScreen.style.display = 'flex';
-    loadingScreen.style.display = 'none';
-    webviewScreen.style.display = 'none';
-    
-    // Clear and focus input
-    accessKeyInput.value = '';
-    accessKeyInput.focus();
+    // Small delay to ensure iframe is cleared
+    setTimeout(() => {
+        // Show landing screen
+        landingScreen.style.display = 'flex';
+        loadingScreen.style.display = 'none';
+        webviewScreen.style.display = 'none';
+        
+        // Clear and focus input
+        accessKeyInput.value = '';
+        accessKeyInput.focus();
+    }, 100);
 }
 
 /**

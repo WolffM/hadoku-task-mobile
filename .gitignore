@@ -1,6 +1,7 @@
 # Capacitor
-android/
-ios/
+# Note: android/ and ios/ are committed because we have custom icons
+# android/
+# ios/
 
 # Node
 node_modules/

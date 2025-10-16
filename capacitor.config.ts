@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'me.hadoku.task',
-  appName: 'Hadoku Task',
+  appName: 'Tasks',
   webDir: 'www',
   server: {
     androidScheme: 'https'

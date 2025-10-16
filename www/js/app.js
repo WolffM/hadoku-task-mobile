@@ -61,13 +61,7 @@ function handleLogin() {
         return;
     }
     
-    // Validate key format (basic check)
-    if (key.length < 10) {
-        alert('Access key seems too short. Please check and try again.');
-        return;
-    }
-    
-    // Store key
+    // Store key (no validation - let server handle it)
     localStorage.setItem(STORAGE_KEY, key);
     
     // Load app

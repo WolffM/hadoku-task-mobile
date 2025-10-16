@@ -1,0 +1,30 @@
+# Capacitor
+android/
+ios/
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env.local
+.env
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

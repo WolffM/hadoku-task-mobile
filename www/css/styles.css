@@ -1,0 +1,211 @@
+/* ============================================
+   HADOKU TASK MOBILE - AUTH WRAPPER
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-primary: #667eea;
+    --color-primary-dark: #5568d3;
+    --color-secondary: #764ba2;
+    --color-bg: #f8f9fa;
+    --color-text: #2d3748;
+    --color-text-light: #718096;
+    --color-border: #e2e8f0;
+    --color-error: #f56565;
+    --color-success: #48bb78;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                 "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   SCREENS
+   ============================================ */
+
+.screen {
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#landing-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+#webview-screen {
+    background: white;
+}
+
+#task-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ============================================
+   LANDING PAGE
+   ============================================ */
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 30px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.logo h1 {
+    font-size: 2rem;
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+.tagline {
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   FORM
+   ============================================ */
+
+.auth-form {
+    margin-bottom: 30px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+button {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover,
+.btn-secondary:active {
+    background: var(--color-bg);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   HELP TEXT
+   ============================================ */
+
+.help-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.help-text a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.help-text a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 480px) {
+    .container {
+        padding: 30px 20px;
+    }
+    
+    .logo h1 {
+        font-size: 1.75rem;
+    }
+}
+
+/* ============================================
+   SAFE AREA (iOS notch support)
+   ============================================ */
+
+@supports (padding: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}

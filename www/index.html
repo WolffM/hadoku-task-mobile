@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <title>Hadoku Task</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Landing page for key entry -->
+    <div id="landing-screen" class="screen">
+        <div class="container">
+            <div class="logo">
+                <h1>📝 Hadoku Task</h1>
+                <p class="tagline">Your tasks, anywhere</p>
+            </div>
+
+            <div class="auth-form">
+                <label for="access-key">Access Key</label>
+                <input 
+                    type="text" 
+                    id="access-key" 
+                    placeholder="Enter your access key"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                />
+                
+                <button id="login-btn" class="btn-primary">
+                    Continue
+                </button>
+
+                <button id="public-mode-btn" class="btn-secondary">
+                    Try Public Mode
+                </button>
+            </div>
+
+            <div class="help-text">
+                <p>Get your access key from <a href="https://hadoku.me/task/" target="_blank">hadoku.me/task</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebView screen (hidden initially) -->
+    <div id="webview-screen" class="screen" style="display: none;">
+        <iframe 
+            id="task-iframe" 
+            src="" 
+            frameborder="0"
+            allow="clipboard-read; clipboard-write"
+        ></iframe>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

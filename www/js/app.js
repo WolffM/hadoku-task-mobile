@@ -8,10 +8,12 @@ const STORAGE_KEY = 'hadoku_access_key';
 
 // DOM elements
 let landingScreen;
+let loadingScreen;
 let webviewScreen;
 let accessKeyInput;
 let loginBtn;
 let publicModeBtn;
+let backBtn;
 let taskIframe;
 
 /**
@@ -20,21 +22,25 @@ let taskIframe;
 window.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     landingScreen = document.getElementById('landing-screen');
+    loadingScreen = document.getElementById('loading-screen');
     webviewScreen = document.getElementById('webview-screen');
     accessKeyInput = document.getElementById('access-key');
     loginBtn = document.getElementById('login-btn');
     publicModeBtn = document.getElementById('public-mode-btn');
+    backBtn = document.getElementById('back-btn');
     taskIframe = document.getElementById('task-iframe');
 
     // Check if user already has a key stored
     const storedKey = localStorage.getItem(STORAGE_KEY);
     if (storedKey) {
+        // Auto-login with stored key
         loadTaskApp(storedKey);
     }
 
     // Event listeners
     loginBtn.addEventListener('click', handleLogin);
     publicModeBtn.addEventListener('click', handlePublicMode);
+    backBtn.addEventListener('click', handleBackToLogin);
     
     // Allow Enter key to submit
     accessKeyInput.addEventListener('keydown', (e) => {
@@ -96,25 +102,56 @@ function loadTaskApp(key, publicMode = false) {
         return;
     }
     
+    // Show loading screen
+    landingScreen.style.display = 'none';
+    loadingScreen.style.display = 'flex';
+    webviewScreen.style.display = 'none';
+    
     // Set iframe source
     taskIframe.src = url;
     
-    // Switch screens
-    landingScreen.style.display = 'none';
-    webviewScreen.style.display = 'block';
+    // Wait for iframe to load
+    taskIframe.onload = () => {
+        // Hide loading, show webview
+        loadingScreen.style.display = 'none';
+        webviewScreen.style.display = 'block';
+        console.log(`✅ Loaded Hadoku Task: ${publicMode ? 'Public Mode' : 'Authenticated'}`);
+    };
     
-    console.log(`✅ Loading Hadoku Task: ${publicMode ? 'Public Mode' : 'Authenticated'}`);
+    // Fallback timeout in case onload doesn't fire
+    setTimeout(() => {
+        if (loadingScreen.style.display !== 'none') {
+            loadingScreen.style.display = 'none';
+            webviewScreen.style.display = 'block';
+        }
+    }, 3000);
+}
+
+/**
+ * Handle back button - return to login screen
+ */
+function handleBackToLogin() {
+    // Clear stored key (user wants to change it)
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Stop loading iframe
+    taskIframe.src = '';
+    
+    // Show landing screen
+    landingScreen.style.display = 'flex';
+    loadingScreen.style.display = 'none';
+    webviewScreen.style.display = 'none';
+    
+    // Clear and focus input
+    accessKeyInput.value = '';
+    accessKeyInput.focus();
 }
 
 /**
  * Handle logout (called from app if needed)
  */
 function logout() {
-    localStorage.removeItem(STORAGE_KEY);
-    taskIframe.src = '';
-    landingScreen.style.display = 'flex';
-    webviewScreen.style.display = 'none';
-    accessKeyInput.value = '';
+    handleBackToLogin();
 }
 
 // Expose logout function globally for potential use

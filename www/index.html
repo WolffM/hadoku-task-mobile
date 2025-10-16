@@ -43,8 +43,19 @@
         </div>
     </div>
 
+    <!-- Loading screen -->
+    <div id="loading-screen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="spinner"></div>
+            <p class="loading-text">Loading Hadoku Task...</p>
+        </div>
+    </div>
+
     <!-- WebView screen (hidden initially) -->
     <div id="webview-screen" class="screen" style="display: none;">
+        <button id="back-btn" class="back-button" title="Change access key">
+            ← Back
+        </button>
         <iframe 
             id="task-iframe" 
             src="" 

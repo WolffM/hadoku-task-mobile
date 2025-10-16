@@ -96,6 +96,9 @@ function loadTaskApp(key, publicMode = false) {
         return;
     }
     
+    // Show/hide back button based on mode
+    backBtn.style.display = publicMode ? 'flex' : 'none';
+    
     // Show loading screen
     landingScreen.style.display = 'none';
     loadingScreen.style.display = 'flex';

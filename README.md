@@ -88,7 +88,11 @@ npm run android:build
 
 # Install on connected device
 npm run android:install
+
+# Release
+git tag v1.0.0 -m "First release - Mobile wrapper with auth" ; git push --tags
 ```
+
 
 ## Project Structure
 

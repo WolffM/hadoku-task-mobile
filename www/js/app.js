@@ -13,7 +13,6 @@ let webviewScreen;
 let accessKeyInput;
 let loginBtn;
 let publicModeBtn;
-let backBtn;
 let taskIframe;
 
 /**
@@ -27,7 +26,6 @@ window.addEventListener('DOMContentLoaded', () => {
     accessKeyInput = document.getElementById('access-key');
     loginBtn = document.getElementById('login-btn');
     publicModeBtn = document.getElementById('public-mode-btn');
-    backBtn = document.getElementById('back-btn');
     taskIframe = document.getElementById('task-iframe');
 
     // Check if user already has a key stored
@@ -40,7 +38,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // Event listeners
     loginBtn.addEventListener('click', handleLogin);
     publicModeBtn.addEventListener('click', handlePublicMode);
-    backBtn.addEventListener('click', handleBackToLogin);
     
     // Allow Enter key to submit
     accessKeyInput.addEventListener('keydown', (e) => {
@@ -95,9 +92,6 @@ function loadTaskApp(key, publicMode = false) {
         console.error('No key provided and not in public mode');
         return;
     }
-    
-    // Show/hide back button based on mode
-    backBtn.style.display = publicMode ? 'flex' : 'none';
     
     // Show loading screen
     landingScreen.style.display = 'none';

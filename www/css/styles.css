@@ -223,41 +223,6 @@ button:disabled {
 }
 
 /* ============================================
-   BACK BUTTON
-   ============================================ */
-
-.back-button {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 1000;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    background: white;
-    border: 2px solid var(--color-border);
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-text);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.back-button:hover,
-.back-button:active {
-    background: var(--color-bg);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* ============================================
    RESPONSIVE
    ============================================ */
 

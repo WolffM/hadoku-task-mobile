@@ -13,17 +13,28 @@ try {
     try {
         execSync(`git rev-parse v${version}`, { stdio: 'ignore' });
         console.log(`❌ Tag v${version} already exists!`);
-        console.log('💡 Run "npm version patch" (or minor/major) to bump version first.');
+        console.log('💡 Delete the tag first: git tag -d v${version} && git push origin :refs/tags/v${version}');
         process.exit(1);
     } catch {
         // Tag doesn't exist, good to continue
     }
 
+    // Commit version change
+    console.log('📝 Committing version change...');
+    execSync('git add package.json package-lock.json', { stdio: 'inherit' });
+    execSync(`git commit -m "Release v${version}"`, { stdio: 'inherit' });
+    
+    // Push commit
+    console.log('⬆️  Pushing commit...');
+    execSync('git push', { stdio: 'inherit' });
+
     // Create annotated tag
+    console.log('🏷️  Creating tag...');
     const message = process.argv[2] || `Release v${version}`;
     execSync(`git tag v${version} -m "${message}"`, { stdio: 'inherit' });
     
     // Push tag
+    console.log('⬆️  Pushing tag...');
     execSync('git push --tags', { stdio: 'inherit' });
     
     console.log(`✅ Release v${version} created and pushed!`);

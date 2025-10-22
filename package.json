@@ -12,7 +12,11 @@
     "android:install": "cd android && gradlew installDebug",
     "generate-icons": "node scripts/generate-icons.js",
     "bump-version": "node scripts/bump-version.js && git add android/app/build.gradle",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "node scripts/release.js",
+    "release:patch": "npm version patch && npm run release",
+    "release:minor": "npm version minor && npm run release",
+    "release:major": "npm version major && npm run release"
   },
   "keywords": [
     "capacitor",

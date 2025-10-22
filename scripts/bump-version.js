@@ -2,9 +2,14 @@ const fs = require('fs');
 const path = require('path');
 
 const GRADLE_FILE = path.join(__dirname, '../android/app/build.gradle');
+const PACKAGE_FILE = path.join(__dirname, '../package.json');
 
 try {
-    // Read the file
+    // Read package.json to get current version
+    const packageJson = JSON.parse(fs.readFileSync(PACKAGE_FILE, 'utf8'));
+    const packageVersion = packageJson.version;
+    
+    // Read gradle file
     let content = fs.readFileSync(GRADLE_FILE, 'utf8');
     
     // Extract current versionCode
@@ -20,10 +25,17 @@ try {
             `versionCode ${newVersion}`
         );
         
+        // Replace versionName with package.json version
+        content = content.replace(
+            /versionName "[^"]+"/,
+            `versionName "${packageVersion}"`
+        );
+        
         // Write back
         fs.writeFileSync(GRADLE_FILE, content);
         
         console.log(`✅ Auto-bumped versionCode: ${currentVersion} → ${newVersion}`);
+        console.log(`✅ Synced versionName: ${packageVersion}`);
         process.exit(0);
     } else {
         console.log('⚠️ versionCode not found in build.gradle');

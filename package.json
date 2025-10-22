@@ -9,7 +9,10 @@
     "sync": "npx cap sync",
     "open:android": "npx cap open android",
     "android:build": "cd android && gradlew assembleDebug",
-    "android:install": "cd android && gradlew installDebug"
+    "android:install": "cd android && gradlew installDebug",
+    "generate-icons": "node scripts/generate-icons.js",
+    "bump-version": "node scripts/bump-version.js && git add android/app/build.gradle",
+    "prepare": "husky"
   },
   "keywords": [
     "capacitor",
@@ -26,6 +29,8 @@
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.0.0",
     "http-server": "^14.1.1",
+    "husky": "^9.1.7",
+    "sharp": "^0.34.4",
     "typescript": "^5.9.3"
   }
 }

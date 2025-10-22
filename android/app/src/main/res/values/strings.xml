@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Hadoku Task</string>
-    <string name="title_activity_main">Hadoku Task</string>
+    <string name="app_name">Tasks</string>
+    <string name="title_activity_main">Tasks</string>
     <string name="package_name">me.hadoku.task</string>
     <string name="custom_url_scheme">me.hadoku.task</string>
 </resources>

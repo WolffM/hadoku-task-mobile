@@ -11,6 +11,12 @@ yarn.lock
 .env.local
 .env
 
+# Android Keystore (NEVER commit this!)
+*.keystore
+*.jks
+keystore.base64.txt
+keystore.base64.oneline.txt
+
 # Build outputs
 dist/
 build/

@@ -42,24 +42,33 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
-    - name: Build Debug APK
-      run: cd android && ./gradlew assembleDebug
+    - name: Decode Keystore
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+    - name: Build Release APK
+      run: cd android && ./gradlew assembleRelease
+      env:
+        KEYSTORE_FILE: release.keystore
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     - name: Rename APK
-      run: cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/hadoku-task.apk
+      run: cp android/app/build/outputs/apk/release/app-release-unsigned.apk android/app/build/outputs/apk/release/hadoku-task.apk || cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/hadoku-task.apk
 
-    - name: Upload Debug APK
+    - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
         name: hadoku-task-apk
-        path: android/app/build/outputs/apk/debug/hadoku-task.apk
+        path: android/app/build/outputs/apk/release/hadoku-task.apk
         retention-days: 30
 
     - name: Create Release (on tag push)
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
-        files: android/app/build/outputs/apk/debug/hadoku-task.apk
+        files: android/app/build/outputs/apk/release/hadoku-task.apk
         draft: false
         prerelease: false
       env:

@@ -1,10 +1,13 @@
 /**
- * Hadoku Task Mobile - Auth Wrapper
- * Simple landing page that loads hadoku.me/task in WebView
+ * Hadoku Task Mobile - Simple Browser Wrapper
+ * 
+ * Dead simple: Show landing page once, then remember the URL forever.
+ * Everything else (auth, themes, preferences) is handled by the website's session storage.
  */
 
 const HADOKU_TASK_URL = 'https://hadoku.me/task/';
-const STORAGE_KEY = 'hadoku_access_key';
+const LAST_URL_KEY = 'hadoku_last_url';
+const HAS_LAUNCHED_KEY = 'hadoku_has_launched';
 
 // DOM elements
 let landingScreen;
@@ -28,11 +31,22 @@ window.addEventListener('DOMContentLoaded', () => {
     publicModeBtn = document.getElementById('public-mode-btn');
     taskIframe = document.getElementById('task-iframe');
 
-    // Check if user already has a key stored
-    const storedKey = localStorage.getItem(STORAGE_KEY);
-    if (storedKey) {
-        // Auto-login with stored key
-        loadTaskApp(storedKey);
+    // Check if this is the first launch ever
+    const hasLaunched = localStorage.getItem(HAS_LAUNCHED_KEY);
+    const lastUrl = localStorage.getItem(LAST_URL_KEY);
+
+    if (!hasLaunched) {
+        // First launch ever - show landing page
+        console.log('🆕 First launch - showing landing page');
+        showLandingScreen();
+    } else if (lastUrl) {
+        // Load the last URL we had
+        console.log('✅ Loading last URL:', lastUrl);
+        loadUrl(lastUrl);
+    } else {
+        // Fallback: load in public mode
+        console.log('🌐 No last URL, loading public mode');
+        loadUrl(`${HADOKU_TASK_URL}?mode=public`);
     }
 
     // Event listeners
@@ -48,6 +62,16 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * Show the landing screen (only on first launch)
+ */
+function showLandingScreen() {
+    landingScreen.style.display = 'flex';
+    loadingScreen.style.display = 'none';
+    webviewScreen.style.display = 'none';
+    accessKeyInput.focus();
+}
+
+/**
  * Handle login with access key
  */
 function handleLogin() {
@@ -58,40 +82,29 @@ function handleLogin() {
         return;
     }
     
-    // Store key (no validation - let server handle it)
-    localStorage.setItem(STORAGE_KEY, key);
-    
-    // Load app
-    loadTaskApp(key);
+    // Mark as launched and load with key
+    localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
+    const url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
+    localStorage.setItem(LAST_URL_KEY, url);
+    loadUrl(url);
 }
 
 /**
- * Handle public mode (no auth)
+ * Handle public mode
  */
 function handlePublicMode() {
-    // Clear stored key if any
-    localStorage.removeItem(STORAGE_KEY);
-    
-    // Load app in public mode
-    loadTaskApp(null, true);
+    // Mark as launched and load in public mode
+    localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
+    const url = `${HADOKU_TASK_URL}?mode=public`;
+    localStorage.setItem(LAST_URL_KEY, url);
+    loadUrl(url);
 }
 
 /**
- * Load the main task app in iframe
+ * Load a URL in the iframe
  */
-function loadTaskApp(key, publicMode = false) {
-    let url;
-    
-    if (publicMode) {
-        // Public mode - no key needed
-        url = `${HADOKU_TASK_URL}?mode=public`;
-    } else if (key) {
-        // Authenticated mode
-        url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
-    } else {
-        console.error('No key provided and not in public mode');
-        return;
-    }
+function loadUrl(url) {
+    console.log('📱 Loading URL:', url);
     
     // Show loading screen
     landingScreen.style.display = 'none';
@@ -103,13 +116,17 @@ function loadTaskApp(key, publicMode = false) {
     
     // Wait for iframe to load
     taskIframe.onload = () => {
+        console.log('✅ Loaded');
+        
+        // Update stored URL to match current iframe src (handles internal navigation)
+        updateStoredUrl();
+        
         // Hide loading, show webview
         loadingScreen.style.display = 'none';
         webviewScreen.style.display = 'block';
-        console.log(`✅ Loaded Hadoku Task: ${publicMode ? 'Public Mode' : 'Authenticated'}`);
     };
     
-    // Fallback timeout in case onload doesn't fire
+    // Fallback timeout
     setTimeout(() => {
         if (loadingScreen.style.display !== 'none') {
             loadingScreen.style.display = 'none';
@@ -119,59 +136,23 @@ function loadTaskApp(key, publicMode = false) {
 }
 
 /**
- * Handle back button - return to login screen
+ * Update the stored URL to match iframe's current src
+ * This handles when the website internally navigates (like changing auth key)
  */
-function handleBackToLogin() {
-    // Clear stored key (user wants to change it)
-    localStorage.removeItem(STORAGE_KEY);
-    
-    // Stop loading iframe and clear it completely
-    taskIframe.src = 'about:blank';
-    
-    // Small delay to ensure iframe is cleared
-    setTimeout(() => {
-        // Show landing screen
-        landingScreen.style.display = 'flex';
-        loadingScreen.style.display = 'none';
-        webviewScreen.style.display = 'none';
-        
-        // Clear and focus input
-        accessKeyInput.value = '';
-        accessKeyInput.focus();
-    }, 100);
+function updateStoredUrl() {
+    const currentUrl = taskIframe.src;
+    if (currentUrl && currentUrl !== 'about:blank') {
+        const lastUrl = localStorage.getItem(LAST_URL_KEY);
+        if (currentUrl !== lastUrl) {
+            console.log('🔄 URL changed, updating stored URL');
+            localStorage.setItem(LAST_URL_KEY, currentUrl);
+        }
+    }
 }
 
-/**
- * Handle logout (called from app if needed)
- */
-function logout() {
-    handleBackToLogin();
-}
-
-// Expose logout function globally for potential use
-window.hadokuLogout = logout;
-
-/**
- * Listen for messages from iframe (optional future enhancement)
- */
-window.addEventListener('message', (event) => {
-    // Verify origin
-    if (event.origin !== 'https://hadoku.me') {
-        return;
+// Check for URL changes periodically (handles internal navigation in iframe)
+setInterval(() => {
+    if (taskIframe && taskIframe.src && taskIframe.src !== 'about:blank') {
+        updateStoredUrl();
     }
-    
-    // Handle messages from task app
-    const { type, data } = event.data;
-    
-    switch (type) {
-        case 'logout':
-            logout();
-            break;
-        case 'error':
-            console.error('Error from task app:', data);
-            // Could show error UI here
-            break;
-        default:
-            console.log('Unknown message type:', type);
-    }
-});
+}, 2000); // Check every 2 seconds

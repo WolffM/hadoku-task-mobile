@@ -1,0 +1,520 @@
+/**
+ * Hadoku Task Mobile - Browser-like WebView Wrapper
+ * 
+ * Loads hadoku.me/task in WebView with smart session management.
+ * Behaves like a normal browser - once loaded, all navigation and auth
+ * changes happen within the website itself.
+ * 
+ * Session Management Strategy:
+ * - On app startup, respects stored credentials but checks for session conflicts
+ * - Listens for key changes made within the iframe (settings page)
+ * - Syncs localStorage with the actual session state from hadoku.me
+ * - Never forces user back to login screen - website handles all auth UI
+ * - Landing screen only shown on first launch or when no stored session exists
+ */
+
+const HADOKU_TASK_URL = 'https://hadoku.me/task/';
+const STORAGE_KEY = 'hadoku_access_key';
+const FIRST_LAUNCH_KEY = 'hadoku_first_launch';
+
+// DOM elements
+let landingScreen;
+let loadingScreen;
+let webviewScreen;
+let accessKeyInput;
+let loginBtn;
+let publicModeBtn;
+let taskIframe;
+
+/**
+ * Initialize app on load
+ */
+window.addEventListener('DOMContentLoaded', () => {
+    // Get DOM elements
+    landingScreen = document.getElementById('landing-screen');
+    loadingScreen = document.getElementById('loading-screen');
+    webviewScreen = document.getElementById('webview-screen');
+    accessKeyInput = document.getElementById('access-key');
+    loginBtn = document.getElementById('login-btn');
+    publicModeBtn = document.getElementById('public-mode-btn');
+    taskIframe = document.getElementById('task-iframe');
+
+    // Initialize app state - prefer stored key but don't auto-load yet
+    initializeAppState();
+
+    // Event listeners
+    loginBtn.addEventListener('click', handleLogin);
+    publicModeBtn.addEventListener('click', handlePublicMode);
+    
+    // Allow Enter key to submit
+    accessKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+});
+
+/**
+ * Initialize app state - check for stored credentials and decide what to show
+ */
+function initializeAppState() {
+    const storedKey = localStorage.getItem(STORAGE_KEY);
+    const firstLaunchFlag = localStorage.getItem(FIRST_LAUNCH_KEY);
+    const isFirstLaunch = !firstLaunchFlag;
+    
+    console.log('🔍 Initialization Debug:', {
+        storedKey: storedKey ? 'present' : 'null',
+        firstLaunchFlag,
+        isFirstLaunch
+    });
+    
+    if (storedKey) {
+        // We have a stored key, load the app and let the iframe
+        // tell us if there's a different session state we should respect
+        console.log('✅ Loading with stored key');
+        loadTaskApp(storedKey, false, true);
+    } else if (isFirstLaunch) {
+        // True first launch - show landing screen so user can choose
+        console.log('🆕 First launch - showing landing screen');
+        showLandingScreen();
+    } else {
+        // User previously used the app but has no stored key (cleared or chose public)
+        // Default to public mode like a browser would - NEVER go back to landing screen
+        console.log('🌐 No stored key, defaulting to public mode (no landing screen)');
+        loadTaskApp(null, true);
+    }
+}
+
+/**
+ * Mark that the user has completed their first launch
+ */
+function markFirstLaunchComplete() {
+    const timestamp = Date.now();
+    localStorage.setItem(FIRST_LAUNCH_KEY, timestamp.toString());
+    console.log('✅ Marked first launch complete at:', new Date(timestamp));
+}
+
+/**
+ * Show the landing screen (only used for initial setup)
+ */
+function showLandingScreen() {
+    landingScreen.style.display = 'flex';
+    loadingScreen.style.display = 'none';
+    webviewScreen.style.display = 'none';
+    accessKeyInput.focus();
+}
+
+/**
+ * Handle login with access key
+ */
+function handleLogin() {
+    const key = accessKeyInput.value.trim();
+    
+    if (!key) {
+        alert('Please enter your access key');
+        return;
+    }
+    
+    // Store key (no validation - let server handle it)
+    localStorage.setItem(STORAGE_KEY, key);
+    
+    // Mark first launch complete
+    markFirstLaunchComplete();
+    
+    // Load app
+    loadTaskApp(key);
+}
+
+/**
+ * Handle public mode (no auth)
+ */
+function handlePublicMode() {
+    // Clear stored key if any
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Mark first launch complete
+    markFirstLaunchComplete();
+    
+    // Load app in public mode
+    loadTaskApp(null, true);
+}
+
+/**
+ * Load the main task app in iframe
+ */
+function loadTaskApp(key, publicMode = false, checkSession = false) {
+    let url;
+    
+    if (publicMode) {
+        // Public mode - no key needed
+        url = `${HADOKU_TASK_URL}?mode=public`;
+    } else if (key) {
+        // Authenticated mode
+        url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
+        
+        // If we're checking session, add a parameter to tell the iframe
+        // we want to know about any session conflicts
+        if (checkSession) {
+            url += `&mobile_session_check=true`;
+        }
+    } else {
+        console.error('No key provided and not in public mode');
+        return;
+    }
+    
+    // Show loading screen
+    landingScreen.style.display = 'none';
+    loadingScreen.style.display = 'flex';
+    webviewScreen.style.display = 'none';
+    
+    // Set iframe source
+    taskIframe.src = url;
+    
+    // Wait for iframe to load (including internal navigations)
+    taskIframe.onload = () => {
+        console.log('🔄 iframe loaded/navigated, checking for URL sync');
+        
+        // Always sync localStorage with current iframe URL after load
+        syncWithIframeUrl();
+        
+        // CRITICAL: Try to detect internal navigation by checking if URL params changed
+        detectInternalNavigation();
+        
+        // If we're doing a session check, request current session info
+        if (checkSession) {
+            // Give the iframe a moment to fully load, then request session info
+            setTimeout(() => {
+                requestSessionInfo();
+                // Also set up periodic session checking
+                startPeriodicSessionCheck();
+            }, 500);
+        }
+        
+        // Set up URL monitoring to detect key changes (only once)
+        if (!taskIframe._urlMonitoringSetup) {
+            startUrlMonitoring();
+            taskIframe._urlMonitoringSetup = true;
+        }
+        
+        // Hide loading, show webview
+        loadingScreen.style.display = 'none';
+        webviewScreen.style.display = 'block';
+        console.log(`✅ Loaded Hadoku Task: ${publicMode ? 'Public Mode' : 'Authenticated'}`);
+    };
+    
+    // Fallback timeout in case onload doesn't fire
+    setTimeout(() => {
+        if (loadingScreen.style.display !== 'none') {
+            loadingScreen.style.display = 'none';
+            webviewScreen.style.display = 'block';
+        }
+    }, 3000);
+}
+
+/**
+ * Detect internal navigation within iframe (when website does window.location.href)
+ */
+function detectInternalNavigation() {
+    console.log('🔍 Detecting internal navigation...');
+    
+    // Since we can't read the iframe's internal URL due to cross-origin,
+    // we need to use other methods to detect authentication state changes
+    
+    // Method 1: Try to communicate with the iframe
+    setTimeout(() => {
+        try {
+            taskIframe.contentWindow.postMessage({
+                type: 'mobile_get_current_auth_state',
+                timestamp: Date.now()
+            }, 'https://hadoku.me');
+        } catch (error) {
+            console.log('Could not request auth state from iframe:', error);
+        }
+    }, 1000); // Wait for page to fully load
+    
+    // Method 2: Monitor for URL hash changes or other indicators
+    // This is a fallback approach
+}
+
+/**
+ * Sync mobile app localStorage with the current iframe URL
+ */
+function syncWithIframeUrl() {
+    try {
+        // Try to get the current URL from the iframe src
+        const currentUrl = taskIframe.src;
+        
+        if (currentUrl && currentUrl !== 'about:blank') {
+            console.log('🔍 Syncing with iframe URL:', currentUrl);
+            
+            const url = new URL(currentUrl);
+            const urlKey = url.searchParams.get('key');
+            const isPublicMode = url.searchParams.get('mode') === 'public';
+            const storedKey = localStorage.getItem(STORAGE_KEY);
+            
+            console.log('📊 URL sync check:', {
+                urlKey: urlKey ? 'present' : 'null',
+                isPublicMode,
+                storedKey: storedKey ? 'present' : 'null'
+            });
+            
+            // Sync localStorage with URL parameters
+            if (isPublicMode || !urlKey) {
+                if (storedKey) {
+                    console.log('🌐 URL shows public mode, clearing stored key');
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            } else if (urlKey && urlKey !== storedKey) {
+                console.log('🔑 URL has different key, updating localStorage');
+                localStorage.setItem(STORAGE_KEY, urlKey);
+            }
+        }
+    } catch (error) {
+        console.log('Could not sync with iframe URL:', error);
+    }
+}
+
+/**
+ * Request session information from the iframe
+ */
+function requestSessionInfo() {
+    try {
+        taskIframe.contentWindow.postMessage({
+            type: 'mobile_request_session_info',
+            timestamp: Date.now()
+        }, 'https://hadoku.me');
+    } catch (error) {
+        console.log('Could not request session info (cross-origin):', error);
+        // This is expected for cross-origin iframes, the website will need to
+        // implement the mobile_session_check parameter handling
+    }
+}
+
+/**
+ * Start periodic session checking to keep mobile app in sync
+ */
+function startPeriodicSessionCheck() {
+    // Check session every 30 seconds while app is active
+    const intervalId = setInterval(() => {
+        if (taskIframe && taskIframe.src && taskIframe.src !== 'about:blank') {
+            requestSessionInfo();
+        } else {
+            // Clear interval if iframe is not loaded
+            clearInterval(intervalId);
+        }
+    }, 30000); // 30 seconds
+    
+    // Also check when page becomes visible again (user returns to app)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && taskIframe && taskIframe.src !== 'about:blank') {
+            console.log('App became visible, checking session state');
+            setTimeout(() => requestSessionInfo(), 1000);
+        }
+    });
+}
+
+/**
+ * Monitor iframe for any changes and try to stay in sync
+ */
+function startUrlMonitoring() {
+    let lastSrc = taskIframe.src;
+    let loadCount = 0;
+    
+    // Monitor iframe src changes (this works even with cross-origin)
+    const checkIframeSrcChange = () => {
+        if (taskIframe.src !== lastSrc && taskIframe.src !== 'about:blank') {
+            console.log('🔄 iframe src changed to:', taskIframe.src);
+            syncWithIframeUrl();
+            lastSrc = taskIframe.src;
+        }
+    };
+    
+    // More aggressive load monitoring
+    const handleIframeLoad = () => {
+        loadCount++;
+        console.log(`� iframe load event #${loadCount}`);
+        
+        // Every time iframe loads (including internal navigations), try to sync
+        setTimeout(() => {
+            console.log('🔍 Post-load sync attempt');
+            syncWithIframeUrl();
+            detectInternalNavigation();
+        }, 100);
+        
+        // Also try again after a longer delay in case the page is still loading
+        setTimeout(() => {
+            console.log('🔍 Delayed sync attempt');
+            syncWithIframeUrl();
+            detectInternalNavigation();
+        }, 2000);
+    };
+    
+    // Use MutationObserver to watch for src attribute changes
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                checkIframeSrcChange();
+            }
+        });
+    });
+    
+    observer.observe(taskIframe, {
+        attributes: true,
+        attributeFilter: ['src']
+    });
+    
+    // Listen for all iframe load events
+    taskIframe.addEventListener('load', handleIframeLoad);
+    
+    // Periodic aggressive sync as backup
+    const intervalId = setInterval(() => {
+        console.log('🔄 Periodic sync check');
+        checkIframeSrcChange();
+        syncWithIframeUrl();
+        detectInternalNavigation();
+    }, 3000); // Check every 3 seconds
+    
+    // Cleanup function
+    return () => {
+        observer.disconnect();
+        clearInterval(intervalId);
+        taskIframe.removeEventListener('load', handleIframeLoad);
+    };
+}
+
+
+
+/**
+ * Handle logout - just clear stored key but stay in the app
+ */
+function logout() {
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('Logged out - cleared stored key');
+    // Don't go back to login screen, let the website handle the logout UI
+}
+
+// Expose logout function globally for potential use
+window.hadokuLogout = logout;
+
+/**
+ * Listen for messages from iframe
+ */
+window.addEventListener('message', (event) => {
+    // Verify origin
+    if (event.origin !== 'https://hadoku.me') {
+        return;
+    }
+    
+    // Handle messages from task app
+    const { type, data } = event.data;
+    
+    switch (type) {
+        case 'logout':
+            // Just clear the stored key, let the website handle logout UI
+            logout();
+            break;
+            
+        case 'key_changed':
+            // The user changed their key within the app
+            handleKeyChanged(data.newKey, data.publicMode);
+            break;
+            
+        case 'current_auth_state':
+            // Response to our auth state request
+            handleCurrentAuthState(data);
+            break;
+            
+        case 'session_info':
+            // Response to our session info request
+            handleSessionInfo(data);
+            break;
+            
+        case 'session_conflict':
+            // The iframe detected a session conflict
+            handleSessionConflict(data);
+            break;
+            
+        case 'error':
+            console.error('Error from task app:', data);
+            // Could show error UI here
+            break;
+            
+        default:
+            console.log('Unknown message type:', type, data);
+    }
+});
+
+/**
+ * Handle current auth state response from iframe
+ */
+function handleCurrentAuthState(authData) {
+    console.log('🔐 Current auth state received:', authData);
+    
+    const { key, isPublicMode, url } = authData;
+    const storedKey = localStorage.getItem(STORAGE_KEY);
+    
+    console.log('Auth state comparison:', {
+        iframeKey: key ? 'present' : 'null',
+        isPublicMode,
+        storedKey: storedKey ? 'present' : 'null',
+        url
+    });
+    
+    // Update localStorage to match iframe's current auth state
+    if (isPublicMode || !key) {
+        if (storedKey) {
+            console.log('🌐 iframe is in public mode, clearing stored key');
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    } else if (key && key !== storedKey) {
+        console.log('🔑 iframe has different key, updating localStorage');
+        localStorage.setItem(STORAGE_KEY, key);
+    }
+}
+
+/**
+ * Handle key change from within the iframe
+ */
+function handleKeyChanged(newKey, publicMode = false) {
+    console.log('Key changed within app:', publicMode ? 'Public Mode' : 'New Key');
+    
+    if (publicMode) {
+        // User switched to public mode
+        localStorage.removeItem(STORAGE_KEY);
+    } else if (newKey) {
+        // User entered a new key
+        localStorage.setItem(STORAGE_KEY, newKey);
+    }
+}
+
+/**
+ * Handle session info response from iframe
+ */
+function handleSessionInfo(sessionData) {
+    const storedKey = localStorage.getItem(STORAGE_KEY);
+    const { currentKey, publicMode } = sessionData;
+    
+    console.log('Session info received:', { currentKey, publicMode, storedKey });
+    
+    // If the iframe has a different session than what we stored, update our storage
+    if (publicMode && storedKey) {
+        // Website is in public mode but we have a stored key - clear it
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('Cleared stored key - website is in public mode');
+    } else if (currentKey && currentKey !== storedKey) {
+        // Website has a different key than what we stored - update our storage
+        localStorage.setItem(STORAGE_KEY, currentKey);
+        console.log('Updated stored key to match website session');
+    }
+}
+
+/**
+ * Handle session conflict from iframe
+ */
+function handleSessionConflict(conflictData) {
+    console.log('Session conflict detected:', conflictData);
+    
+    // The website will handle the conflict resolution,
+    // we just need to be ready to update our storage based on the user's choice
+    // This might trigger a key_changed message later
+}

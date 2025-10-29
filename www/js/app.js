@@ -78,33 +78,57 @@ async function validateKey(key) {
     try {
         console.log('🔍 Validating key:', key.substring(0, 8) + '...');
         
-        const response = await fetch('https://hadoku.me/task/api/validate-key', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache'
-            },
-            body: JSON.stringify({ key }),
-            cache: 'no-store'
-        });
-        
-        console.log('📡 Response status:', response.status);
-        console.log('📡 Response headers:', response.headers);
-        
-        if (!response.ok) {
-            console.error('❌ HTTP error:', response.status, response.statusText);
-            alert(`HTTP Error: ${response.status} ${response.statusText}`);
-            return false;
+        // Use Capacitor HTTP for better Android WebView compatibility
+        if (window.Capacitor && window.Capacitor.Plugins.CapacitorHttp) {
+            console.log('📱 Using Capacitor HTTP plugin');
+            
+            const response = await window.Capacitor.Plugins.CapacitorHttp.request({
+                url: 'https://hadoku.me/task/api/validate-key',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: { key }
+            });
+            
+            console.log('📡 Capacitor Response status:', response.status);
+            console.log('📋 Capacitor Response data:', response.data);
+            
+            // Show result in alert for debugging
+            alert(`Capacitor API Response: ${JSON.stringify(response.data)}`);
+            
+            return response.data.valid === true;
+        } else {
+            // Fallback to regular fetch for web/development
+            console.log('🌐 Using regular fetch');
+            
+            const response = await fetch('https://hadoku.me/task/api/validate-key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                },
+                body: JSON.stringify({ key }),
+                cache: 'no-store'
+            });
+            
+            console.log('📡 Response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('❌ HTTP error:', response.status, response.statusText);
+                alert(`HTTP Error: ${response.status} ${response.statusText}`);
+                return false;
+            }
+            
+            const result = await response.json();
+            console.log('📋 Validation result:', result);
+            
+            // Show result in alert for debugging
+            alert(`Fetch API Response: ${JSON.stringify(result)}`);
+            
+            return result.valid === true;
         }
-        
-        const result = await response.json();
-        console.log('📋 Validation result:', result);
-        
-        // Show result in alert for debugging
-        alert(`API Response: ${JSON.stringify(result)}`);
-        
-        return result.valid === true; // Explicitly check for true
     } catch (error) {
         console.error('❌ Key validation failed:', error);
         console.error('❌ Error details:', error.name, error.message);

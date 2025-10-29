@@ -72,9 +72,30 @@ function showLandingScreen() {
 }
 
 /**
+ * Validate access key with the server
+ */
+async function validateKey(key) {
+    try {
+        const response = await fetch('https://hadoku.me/task/api/validate-key', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ key })
+        });
+        
+        const result = await response.json();
+        return result.valid; // true/false
+    } catch (error) {
+        console.error('Key validation failed:', error);
+        return false;
+    }
+}
+
+/**
  * Handle login with access key
  */
-function handleLogin() {
+async function handleLogin() {
     const key = accessKeyInput.value.trim();
     
     if (!key) {
@@ -82,7 +103,22 @@ function handleLogin() {
         return;
     }
     
-    // Mark as launched and load with key
+    // Disable button and show loading state
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Validating...';
+    
+    // Validate the key first
+    const isValid = await validateKey(key);
+    
+    if (!isValid) {
+        // Re-enable button and show error
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Continue';
+        alert('Invalid access key. Please check and try again.');
+        return;
+    }
+    
+    // Key is valid - proceed
     localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
     const url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
     localStorage.setItem(LAST_URL_KEY, url);

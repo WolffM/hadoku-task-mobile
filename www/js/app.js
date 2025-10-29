@@ -59,6 +59,9 @@ window.addEventListener('DOMContentLoaded', () => {
             handleLogin();
         }
     });
+
+    // Listen for messages from the iframe (like key changes)
+    window.addEventListener('message', handleIframeMessage);
 });
 
 /**
@@ -209,6 +212,30 @@ function loadUrl(url) {
             webviewScreen.style.display = 'block';
         }
     }, 3000);
+}
+
+/**
+ * Handle messages from the iframe (like URL/key changes)
+ */
+function handleIframeMessage(event) {
+    // Only accept messages from hadoku.me domain
+    if (!event.origin.includes('hadoku.me')) {
+        return;
+    }
+    
+    console.log('📨 Received message from iframe:', event.data);
+    
+    if (event.data && event.data.type === 'urlChange') {
+        const newUrl = event.data.url;
+        console.log('🔄 Web app reported URL change to:', newUrl);
+        
+        // Update stored URL
+        const lastUrl = localStorage.getItem(LAST_URL_KEY);
+        if (newUrl !== lastUrl) {
+            localStorage.setItem(LAST_URL_KEY, newUrl);
+            console.log('✅ Updated stored URL');
+        }
+    }
 }
 
 /**

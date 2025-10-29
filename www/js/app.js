@@ -78,17 +78,6 @@ async function validateKey(key) {
     try {
         console.log('🔍 Validating key:', key.substring(0, 8) + '...');
         
-        // Temporary: Allow known valid keys to bypass validation for testing
-        const knownValidKeys = [
-            'a21743d9-b0f1-4c75-8e01-ba2dc37feacd',
-            '655b37cf-e0d4-4bf5-88cb-e2d1c2bd9c6b'
-        ];
-        
-        if (knownValidKeys.includes(key)) {
-            console.log('✅ Using known valid key - bypassing API validation');
-            return true;
-        }
-        
         const response = await fetch('https://hadoku.me/task/api/validate-key', {
             method: 'POST',
             headers: {
@@ -101,22 +90,27 @@ async function validateKey(key) {
         });
         
         console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers);
         
         if (!response.ok) {
             console.error('❌ HTTP error:', response.status, response.statusText);
+            alert(`HTTP Error: ${response.status} ${response.statusText}`);
             return false;
         }
         
         const result = await response.json();
         console.log('📋 Validation result:', result);
         
+        // Show result in alert for debugging
+        alert(`API Response: ${JSON.stringify(result)}`);
+        
         return result.valid === true; // Explicitly check for true
     } catch (error) {
         console.error('❌ Key validation failed:', error);
         console.error('❌ Error details:', error.name, error.message);
         
-        // If it's a CORS or network error, show alert for debugging
-        alert(`Network error: ${error.message}. Check console for details.`);
+        // Show detailed error for debugging
+        alert(`Network error: ${error.name}: ${error.message}`);
         return false;
     }
 }

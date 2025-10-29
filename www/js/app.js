@@ -80,8 +80,6 @@ async function validateKey(key) {
         
         // Use Capacitor HTTP for better Android WebView compatibility
         if (window.Capacitor && window.Capacitor.Plugins.CapacitorHttp) {
-            console.log('📱 Using Capacitor HTTP plugin');
-            
             const response = await window.Capacitor.Plugins.CapacitorHttp.request({
                 url: 'https://hadoku.me/task/api/validate-key',
                 method: 'POST',
@@ -91,17 +89,10 @@ async function validateKey(key) {
                 data: { key }
             });
             
-            console.log('📡 Capacitor Response status:', response.status);
-            console.log('📋 Capacitor Response data:', response.data);
-            
-            // Show result in alert for debugging
-            alert(`Capacitor API Response: ${JSON.stringify(response.data)}`);
-            
+            console.log('📡 Capacitor Response:', response.status, response.data);
             return response.data.valid === true;
         } else {
             // Fallback to regular fetch for web/development
-            console.log('🌐 Using regular fetch');
-            
             const response = await fetch('https://hadoku.me/task/api/validate-key', {
                 method: 'POST',
                 headers: {
@@ -113,28 +104,17 @@ async function validateKey(key) {
                 cache: 'no-store'
             });
             
-            console.log('📡 Response status:', response.status);
-            
             if (!response.ok) {
                 console.error('❌ HTTP error:', response.status, response.statusText);
-                alert(`HTTP Error: ${response.status} ${response.statusText}`);
                 return false;
             }
             
             const result = await response.json();
             console.log('📋 Validation result:', result);
-            
-            // Show result in alert for debugging
-            alert(`Fetch API Response: ${JSON.stringify(result)}`);
-            
             return result.valid === true;
         }
     } catch (error) {
         console.error('❌ Key validation failed:', error);
-        console.error('❌ Error details:', error.name, error.message);
-        
-        // Show detailed error for debugging
-        alert(`Network error: ${error.name}: ${error.message}`);
         return false;
     }
 }
@@ -240,15 +220,30 @@ function updateStoredUrl() {
     if (currentUrl && currentUrl !== 'about:blank') {
         const lastUrl = localStorage.getItem(LAST_URL_KEY);
         if (currentUrl !== lastUrl) {
-            console.log('🔄 URL changed, updating stored URL');
+            console.log('🔄 URL changed from:', lastUrl);
+            console.log('🔄 URL changed to:', currentUrl);
+            
+            // Check if this is a key change (URL has key parameter)
+            const currentUrlObj = new URL(currentUrl);
+            const lastUrlObj = lastUrl ? new URL(lastUrl) : null;
+            
+            const currentKey = currentUrlObj.searchParams.get('key');
+            const lastKey = lastUrlObj ? lastUrlObj.searchParams.get('key') : null;
+            
+            if (currentKey && lastKey && currentKey !== lastKey) {
+                console.log('🔑 Authentication key changed in web app');
+                console.log('🔑 Old key:', lastKey ? lastKey.substring(0, 8) + '...' : 'none');
+                console.log('🔑 New key:', currentKey.substring(0, 8) + '...');
+            }
+            
             localStorage.setItem(LAST_URL_KEY, currentUrl);
         }
     }
 }
 
-// Check for URL changes periodically (handles internal navigation in iframe)
+// Check for URL changes more frequently to catch key changes quickly
 setInterval(() => {
     if (taskIframe && taskIframe.src && taskIframe.src !== 'about:blank') {
         updateStoredUrl();
     }
-}, 2000); // Check every 2 seconds
+}, 1000); // Check every 1 second for faster detection

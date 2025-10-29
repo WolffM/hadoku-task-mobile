@@ -76,18 +76,32 @@ function showLandingScreen() {
  */
 async function validateKey(key) {
     try {
+        console.log('🔍 Validating key:', key.substring(0, 8) + '...');
+        
         const response = await fetch('https://hadoku.me/task/api/validate-key', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
             },
-            body: JSON.stringify({ key })
+            body: JSON.stringify({ key }),
+            cache: 'no-store'
         });
         
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            console.error('❌ HTTP error:', response.status, response.statusText);
+            return false;
+        }
+        
         const result = await response.json();
-        return result.valid; // true/false
+        console.log('📋 Validation result:', result);
+        
+        return result.valid === true; // Explicitly check for true
     } catch (error) {
-        console.error('Key validation failed:', error);
+        console.error('❌ Key validation failed:', error);
         return false;
     }
 }
@@ -107,22 +121,35 @@ async function handleLogin() {
     loginBtn.disabled = true;
     loginBtn.textContent = 'Validating...';
     
-    // Validate the key first
-    const isValid = await validateKey(key);
-    
-    if (!isValid) {
-        // Re-enable button and show error
+    try {
+        // Add a small delay to prevent rapid requests
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Validate the key first
+        console.log('🚀 Starting validation for key');
+        const isValid = await validateKey(key);
+        
+        if (!isValid) {
+            // Re-enable button and show error
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Continue';
+            alert('Invalid access key. Please check and try again.');
+            return;
+        }
+        
+        // Key is valid - proceed
+        console.log('✅ Key validated successfully');
+        localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
+        const url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
+        localStorage.setItem(LAST_URL_KEY, url);
+        loadUrl(url);
+        
+    } catch (error) {
+        console.error('❌ Login process failed:', error);
         loginBtn.disabled = false;
         loginBtn.textContent = 'Continue';
-        alert('Invalid access key. Please check and try again.');
-        return;
+        alert('Login failed. Please try again.');
     }
-    
-    // Key is valid - proceed
-    localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
-    const url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
-    localStorage.setItem(LAST_URL_KEY, url);
-    loadUrl(url);
 }
 
 /**

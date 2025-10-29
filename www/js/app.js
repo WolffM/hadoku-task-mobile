@@ -180,6 +180,73 @@ function handlePublicMode() {
 }
 
 /**
+ * Monitor iframe for URL changes by watching navigation events
+ */
+function setupIframeNavigationMonitoring() {
+    // Listen for beforeunload events (when page is about to change)
+    try {
+        taskIframe.contentWindow.addEventListener('beforeunload', () => {
+            console.log('🔄 Iframe is about to navigate (beforeunload)');
+            // Store a flag to check for changes after reload
+            sessionStorage.setItem('iframe_navigating', 'true');
+        });
+    } catch (error) {
+        console.log('🚫 Cannot add beforeunload listener due to CORS');
+    }
+    
+    // Monitor for iframe load events to detect when navigation completes
+    taskIframe.addEventListener('load', () => {
+        console.log('🔄 Iframe loaded/reloaded');
+        
+        if (sessionStorage.getItem('iframe_navigating') === 'true') {
+            sessionStorage.removeItem('iframe_navigating');
+            console.log('🔍 Checking for URL changes after navigation...');
+            
+            // Check multiple times as the URL might update gradually
+            setTimeout(() => checkIframeSrcChange(), 100);
+            setTimeout(() => checkIframeSrcChange(), 500);
+            setTimeout(() => checkIframeSrcChange(), 1000);
+            setTimeout(() => checkIframeSrcChange(), 2000);
+        }
+    });
+}
+
+/**
+ * Check if iframe src has changed and update stored URL
+ */
+function checkIframeSrcChange() {
+    const currentSrc = taskIframe.src;
+    const lastUrl = localStorage.getItem(LAST_URL_KEY);
+    
+    if (currentSrc && currentSrc !== 'about:blank' && currentSrc !== lastUrl) {
+        console.log('🔍 Detected iframe src change');
+        console.log('🔄 From:', lastUrl);
+        console.log('🔄 To:', currentSrc);
+        
+        // Check if this is a key change
+        try {
+            const currentUrlObj = new URL(currentSrc);
+            const lastUrlObj = lastUrl ? new URL(lastUrl) : null;
+            
+            const currentKey = currentUrlObj.searchParams.get('key');
+            const lastKey = lastUrlObj ? lastUrlObj.searchParams.get('key') : null;
+            
+            if (currentKey && lastKey && currentKey !== lastKey) {
+                console.log('🔑 Key change detected!');
+                console.log('🔑 Old key:', lastKey.substring(0, 8) + '...');
+                console.log('🔑 New key:', currentKey.substring(0, 8) + '...');
+            }
+        } catch (e) {
+            console.log('Error parsing URLs:', e);
+        }
+        
+        localStorage.setItem(LAST_URL_KEY, currentSrc);
+        return true;
+    }
+    return false;
+}
+
+/**
  * Load a URL in the iframe
  */
 function loadUrl(url) {
@@ -199,6 +266,9 @@ function loadUrl(url) {
         
         // Update stored URL to match current iframe src (handles internal navigation)
         updateStoredUrl();
+        
+        // Set up navigation monitoring
+        setupIframeNavigationMonitoring();
         
         // Hide loading, show webview
         loadingScreen.style.display = 'none';
@@ -271,6 +341,7 @@ function updateStoredUrl() {
 // Check for URL changes more frequently to catch key changes quickly
 setInterval(() => {
     if (taskIframe && taskIframe.src && taskIframe.src !== 'about:blank') {
-        updateStoredUrl();
+        // Check for any changes in iframe src
+        checkIframeSrcChange();
     }
 }, 1000); // Check every 1 second for faster detection

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Hadoku Task Mobile - Simple Browser Wrapper
  * 
  * Dead simple: Show landing page once, then remember the URL forever.
@@ -37,15 +37,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (!hasLaunched) {
         // First launch ever - show landing page
-        console.log('🆕 First launch - showing landing page');
+        console.log(' First launch - showing landing page');
         showLandingScreen();
     } else if (lastUrl) {
         // Load the last URL we had
-        console.log('✅ Loading last URL:', lastUrl);
+        console.log(' Loading last URL:', lastUrl);
         loadUrl(lastUrl);
     } else {
         // Fallback: load in public mode
-        console.log('🌐 No last URL, loading public mode');
+        console.log(' No last URL, loading public mode');
         loadUrl(`${HADOKU_TASK_URL}?mode=public`);
     }
 
@@ -60,7 +60,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Listen for messages from the iframe (like key changes)
+    // Listen for messages from the iframe (web app will send URL changes)
     window.addEventListener('message', handleIframeMessage);
 });
 
@@ -79,7 +79,7 @@ function showLandingScreen() {
  */
 async function validateKey(key) {
     try {
-        console.log('🔍 Validating key:', key.substring(0, 8) + '...');
+        console.log(' Validating key:', key.substring(0, 8) + '...');
         
         // Use Capacitor HTTP for better Android WebView compatibility
         if (window.Capacitor && window.Capacitor.Plugins.CapacitorHttp) {
@@ -92,32 +92,29 @@ async function validateKey(key) {
                 data: { key }
             });
             
-            console.log('📡 Capacitor Response:', response.status, response.data);
+            console.log(' Validation response:', response.status, response.data);
             return response.data.valid === true;
         } else {
             // Fallback to regular fetch for web/development
             const response = await fetch('https://hadoku.me/task/api/validate-key', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ key }),
-                cache: 'no-store'
+                body: JSON.stringify({ key })
             });
             
             if (!response.ok) {
-                console.error('❌ HTTP error:', response.status, response.statusText);
+                console.error(' HTTP error:', response.status, response.statusText);
                 return false;
             }
             
             const result = await response.json();
-            console.log('📋 Validation result:', result);
+            console.log(' Validation result:', result);
             return result.valid === true;
         }
     } catch (error) {
-        console.error('❌ Key validation failed:', error);
+        console.error(' Key validation failed:', error);
         return false;
     }
 }
@@ -138,11 +135,8 @@ async function handleLogin() {
     loginBtn.textContent = 'Validating...';
     
     try {
-        // Add a small delay to prevent rapid requests
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
         // Validate the key first
-        console.log('🚀 Starting validation for key');
+        console.log(' Validating key...');
         const isValid = await validateKey(key);
         
         if (!isValid) {
@@ -154,14 +148,14 @@ async function handleLogin() {
         }
         
         // Key is valid - proceed
-        console.log('✅ Key validated successfully');
+        console.log(' Key validated successfully');
         localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
         const url = `${HADOKU_TASK_URL}?key=${encodeURIComponent(key)}`;
         localStorage.setItem(LAST_URL_KEY, url);
         loadUrl(url);
         
     } catch (error) {
-        console.error('❌ Login process failed:', error);
+        console.error(' Login process failed:', error);
         loginBtn.disabled = false;
         loginBtn.textContent = 'Continue';
         alert('Login failed. Please try again.');
@@ -180,77 +174,31 @@ function handlePublicMode() {
 }
 
 /**
- * Monitor iframe for URL changes by watching navigation events
+ * Handle messages from the iframe (like URL/key changes)
  */
-function setupIframeNavigationMonitoring() {
-    // Listen for beforeunload events (when page is about to change)
-    try {
-        taskIframe.contentWindow.addEventListener('beforeunload', () => {
-            console.log('🔄 Iframe is about to navigate (beforeunload)');
-            // Store a flag to check for changes after reload
-            sessionStorage.setItem('iframe_navigating', 'true');
-        });
-    } catch (error) {
-        console.log('🚫 Cannot add beforeunload listener due to CORS');
+function handleIframeMessage(event) {
+    // Only accept messages from hadoku.me domain
+    if (!event.origin.includes('hadoku.me')) {
+        return;
     }
     
-    // Monitor for iframe load events to detect when navigation completes
-    taskIframe.addEventListener('load', () => {
-        console.log('🔄 Iframe loaded/reloaded');
-        
-        if (sessionStorage.getItem('iframe_navigating') === 'true') {
-            sessionStorage.removeItem('iframe_navigating');
-            console.log('🔍 Checking for URL changes after navigation...');
-            
-            // Check multiple times as the URL might update gradually
-            setTimeout(() => checkIframeSrcChange(), 100);
-            setTimeout(() => checkIframeSrcChange(), 500);
-            setTimeout(() => checkIframeSrcChange(), 1000);
-            setTimeout(() => checkIframeSrcChange(), 2000);
-        }
-    });
-}
-
-/**
- * Check if iframe src has changed and update stored URL
- */
-function checkIframeSrcChange() {
-    const currentSrc = taskIframe.src;
-    const lastUrl = localStorage.getItem(LAST_URL_KEY);
+    console.log(' Received message from web app:', event.data);
     
-    if (currentSrc && currentSrc !== 'about:blank' && currentSrc !== lastUrl) {
-        console.log('🔍 Detected iframe src change');
-        console.log('🔄 From:', lastUrl);
-        console.log('🔄 To:', currentSrc);
+    if (event.data && event.data.type === 'urlChange') {
+        const newUrl = event.data.url;
+        console.log(' Web app changed URL to:', newUrl);
         
-        // Check if this is a key change
-        try {
-            const currentUrlObj = new URL(currentSrc);
-            const lastUrlObj = lastUrl ? new URL(lastUrl) : null;
-            
-            const currentKey = currentUrlObj.searchParams.get('key');
-            const lastKey = lastUrlObj ? lastUrlObj.searchParams.get('key') : null;
-            
-            if (currentKey && lastKey && currentKey !== lastKey) {
-                console.log('🔑 Key change detected!');
-                console.log('🔑 Old key:', lastKey.substring(0, 8) + '...');
-                console.log('🔑 New key:', currentKey.substring(0, 8) + '...');
-            }
-        } catch (e) {
-            console.log('Error parsing URLs:', e);
-        }
-        
-        localStorage.setItem(LAST_URL_KEY, currentSrc);
-        return true;
+        // Update stored URL
+        localStorage.setItem(LAST_URL_KEY, newUrl);
+        console.log(' Updated stored URL');
     }
-    return false;
 }
 
 /**
  * Load a URL in the iframe
  */
 function loadUrl(url) {
-    console.log('📱 Loading URL:', url);
+    console.log(' Loading URL:', url);
     
     // Show loading screen
     landingScreen.style.display = 'none';
@@ -262,13 +210,7 @@ function loadUrl(url) {
     
     // Wait for iframe to load
     taskIframe.onload = () => {
-        console.log('✅ Loaded');
-        
-        // Update stored URL to match current iframe src (handles internal navigation)
-        updateStoredUrl();
-        
-        // Set up navigation monitoring
-        setupIframeNavigationMonitoring();
+        console.log(' Loaded');
         
         // Hide loading, show webview
         loadingScreen.style.display = 'none';
@@ -283,65 +225,3 @@ function loadUrl(url) {
         }
     }, 3000);
 }
-
-/**
- * Handle messages from the iframe (like URL/key changes)
- */
-function handleIframeMessage(event) {
-    // Only accept messages from hadoku.me domain
-    if (!event.origin.includes('hadoku.me')) {
-        return;
-    }
-    
-    console.log('📨 Received message from iframe:', event.data);
-    
-    if (event.data && event.data.type === 'urlChange') {
-        const newUrl = event.data.url;
-        console.log('🔄 Web app reported URL change to:', newUrl);
-        
-        // Update stored URL
-        const lastUrl = localStorage.getItem(LAST_URL_KEY);
-        if (newUrl !== lastUrl) {
-            localStorage.setItem(LAST_URL_KEY, newUrl);
-            console.log('✅ Updated stored URL');
-        }
-    }
-}
-
-/**
- * Update the stored URL to match iframe's current src
- * This handles when the website internally navigates (like changing auth key)
- */
-function updateStoredUrl() {
-    const currentUrl = taskIframe.src;
-    if (currentUrl && currentUrl !== 'about:blank') {
-        const lastUrl = localStorage.getItem(LAST_URL_KEY);
-        if (currentUrl !== lastUrl) {
-            console.log('🔄 URL changed from:', lastUrl);
-            console.log('🔄 URL changed to:', currentUrl);
-            
-            // Check if this is a key change (URL has key parameter)
-            const currentUrlObj = new URL(currentUrl);
-            const lastUrlObj = lastUrl ? new URL(lastUrl) : null;
-            
-            const currentKey = currentUrlObj.searchParams.get('key');
-            const lastKey = lastUrlObj ? lastUrlObj.searchParams.get('key') : null;
-            
-            if (currentKey && lastKey && currentKey !== lastKey) {
-                console.log('🔑 Authentication key changed in web app');
-                console.log('🔑 Old key:', lastKey ? lastKey.substring(0, 8) + '...' : 'none');
-                console.log('🔑 New key:', currentKey.substring(0, 8) + '...');
-            }
-            
-            localStorage.setItem(LAST_URL_KEY, currentUrl);
-        }
-    }
-}
-
-// Check for URL changes more frequently to catch key changes quickly
-setInterval(() => {
-    if (taskIframe && taskIframe.src && taskIframe.src !== 'about:blank') {
-        // Check for any changes in iframe src
-        checkIframeSrcChange();
-    }
-}, 1000); // Check every 1 second for faster detection

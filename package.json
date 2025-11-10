@@ -1,6 +1,6 @@
 {
   "name": "hadoku-task-mobile",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "Hadoku Task Mobile - Android APK wrapper",
   "main": "index.js",
   "scripts": {

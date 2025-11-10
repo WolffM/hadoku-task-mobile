@@ -16,7 +16,6 @@ let webviewScreen;
 let accessKeyInput;
 let loginBtn;
 let publicModeBtn;
-let taskIframe;
 
 /**
  * Initialize app on load
@@ -29,7 +28,6 @@ window.addEventListener('DOMContentLoaded', () => {
     accessKeyInput = document.getElementById('access-key');
     loginBtn = document.getElementById('login-btn');
     publicModeBtn = document.getElementById('public-mode-btn');
-    taskIframe = document.getElementById('task-iframe');
 
     // Check if this is the first launch ever
     const hasLaunched = localStorage.getItem(HAS_LAUNCHED_KEY);
@@ -52,16 +50,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // Event listeners
     loginBtn.addEventListener('click', handleLogin);
     publicModeBtn.addEventListener('click', handlePublicMode);
-    
+
     // Allow Enter key to submit
     accessKeyInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             handleLogin();
         }
     });
-
-    // Listen for messages from the iframe (web app will send URL changes)
-    window.addEventListener('message', handleIframeMessage);
 });
 
 /**
@@ -79,42 +74,62 @@ function showLandingScreen() {
  */
 async function validateKey(key) {
     try {
-        console.log(' Validating key:', key.substring(0, 8) + '...');
-        
+        console.log('🔍 Validating key:', key.substring(0, 8) + '...');
+
         // Use Capacitor HTTP for better Android WebView compatibility
         if (window.Capacitor && window.Capacitor.Plugins.CapacitorHttp) {
-            const response = await window.Capacitor.Plugins.CapacitorHttp.request({
+            console.log('📱 Using CapacitorHttp plugin');
+
+            const requestConfig = {
                 url: 'https://hadoku.me/task/api/validate-key',
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Hadoku-App': 'mobile-android'
                 },
                 data: { key }
-            });
-            
-            console.log(' Validation response:', response.status, response.data);
+            };
+
+            console.log('📤 Request config:', JSON.stringify(requestConfig, null, 2));
+
+            const response = await window.Capacitor.Plugins.CapacitorHttp.request(requestConfig);
+
+            console.log('📥 Response status:', response.status);
+            console.log('📥 Response headers:', JSON.stringify(response.headers, null, 2));
+            console.log('📥 Response data:', JSON.stringify(response.data, null, 2));
+
             return response.data.valid === true;
         } else {
+            console.log('🌐 Using standard fetch (fallback)');
+
             // Fallback to regular fetch for web/development
             const response = await fetch('https://hadoku.me/task/api/validate-key', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Hadoku-App': 'mobile-android'
                 },
                 body: JSON.stringify({ key })
             });
-            
+
+            console.log('📥 Fetch response status:', response.status, response.statusText);
+
             if (!response.ok) {
-                console.error(' HTTP error:', response.status, response.statusText);
+                console.error('❌ HTTP error:', response.status, response.statusText);
                 return false;
             }
-            
+
             const result = await response.json();
-            console.log(' Validation result:', result);
+            console.log('📥 Fetch result:', result);
             return result.valid === true;
         }
     } catch (error) {
-        console.error(' Key validation failed:', error);
+        console.error('❌ Key validation failed:', error);
+        console.error('❌ Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         return false;
     }
 }
@@ -174,54 +189,15 @@ function handlePublicMode() {
 }
 
 /**
- * Handle messages from the iframe (like URL/key changes)
- */
-function handleIframeMessage(event) {
-    // Only accept messages from hadoku.me domain
-    if (!event.origin.includes('hadoku.me')) {
-        return;
-    }
-    
-    console.log(' Received message from web app:', event.data);
-    
-    if (event.data && event.data.type === 'urlChange') {
-        const newUrl = event.data.url;
-        console.log(' Web app changed URL to:', newUrl);
-        
-        // Update stored URL
-        localStorage.setItem(LAST_URL_KEY, newUrl);
-        console.log(' Updated stored URL');
-    }
-}
-
-/**
- * Load a URL in the iframe
+ * Load a URL by navigating directly to it
+ *
+ * Note: URL tracking is handled automatically by the native Android code
+ * which injects a monitoring script into hadoku.me pages
  */
 function loadUrl(url) {
-    console.log(' Loading URL:', url);
-    
-    // Show loading screen
-    landingScreen.style.display = 'none';
-    loadingScreen.style.display = 'flex';
-    webviewScreen.style.display = 'none';
-    
-    // Set iframe source
-    taskIframe.src = url;
-    
-    // Wait for iframe to load
-    taskIframe.onload = () => {
-        console.log(' Loaded');
-        
-        // Hide loading, show webview
-        loadingScreen.style.display = 'none';
-        webviewScreen.style.display = 'block';
-    };
-    
-    // Fallback timeout
-    setTimeout(() => {
-        if (loadingScreen.style.display !== 'none') {
-            loadingScreen.style.display = 'none';
-            webviewScreen.style.display = 'block';
-        }
-    }, 3000);
+    console.log('🔄 Navigating to URL:', url);
+
+    // Simply navigate to the URL - this will use Capacitor's native WebView
+    // which has the custom User-Agent and headers configured
+    window.location.href = url;
 }

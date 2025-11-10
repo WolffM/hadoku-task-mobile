@@ -8,7 +8,8 @@ const config: CapacitorConfig = {
     androidScheme: 'https'
   },
   android: {
-    allowMixedContent: false
+    allowMixedContent: false,
+    appendUserAgent: 'HadokuTaskApp/3.0'
   },
   plugins: {
     CapacitorHttp: {

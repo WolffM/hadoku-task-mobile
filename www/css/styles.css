@@ -50,16 +50,6 @@ body {
     padding: 20px;
 }
 
-#webview-screen {
-    background: white;
-}
-
-#task-iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
 /* ============================================
    LANDING PAGE
    ============================================ */
@@ -147,13 +137,6 @@ button {
     background: var(--color-primary-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
 .btn-secondary {

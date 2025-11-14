@@ -1,6 +1,6 @@
 ﻿/**
  * Hadoku Task Mobile - Direct Navigation (No Iframe)
- * 
+ *
  * Super simple wrapper that navigates directly to hadoku.me/task
  * The website handles all auth via sessionStorage/localStorage
  * Mobile app just shows a landing page once, then gets out of the way
@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
     log('User Agent:', navigator.userAgent);
     log('Platform:', navigator.platform);
     log('═══════════════════════════════════════');
-    
+
     // Get DOM elements
     landingScreen = document.getElementById('landing-screen');
     loadingScreen = document.getElementById('loading-screen');
@@ -64,14 +64,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // Event listeners
     loginBtn.addEventListener('click', handleLogin);
     publicModeBtn.addEventListener('click', handlePublicMode);
-    
+
     // Allow Enter key to submit
     accessKeyInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             handleLogin();
         }
     });
-    
+
     log('Event listeners attached');
 });
 
@@ -156,25 +156,25 @@ async function validateKey(key) {
  */
 async function handleLogin() {
     const key = accessKeyInput.value.trim();
-    
+
     log('Login button clicked, key length:', key.length);
-    
+
     if (!key) {
         alert('Please enter your access key');
         log('Login failed: empty key');
         return;
     }
-    
+
     // Disable button and show loading state
     loginBtn.disabled = true;
     const originalText = loginBtn.textContent;
     loginBtn.textContent = 'Validating...';
-    
+
     try {
         // Validate the key first
         log('🔐 Validating key...');
         const isValid = await validateKey(key);
-        
+
         if (!isValid) {
             // Re-enable button and show error
             loginBtn.disabled = false;
@@ -183,22 +183,22 @@ async function handleLogin() {
             log('❌ Key validation failed');
             return;
         }
-        
+
         // Key is valid - proceed
         log('✅ Key validated successfully');
-        
+
         // Mark as launched
         localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
         log('Login: HAS_LAUNCHED_KEY set to true');
-        
+
         // Store the key in sessionStorage for the website to read
         // Website expects 'auth_key' as per mobile integration docs
         sessionStorage.setItem('auth_key', key);
         log('Login: Stored auth_key in sessionStorage');
-        
+
         // Navigate to task website
         navigateToTaskWebsite();
-        
+
     } catch (error) {
         log('❌ Login process failed:', error);
         loginBtn.disabled = false;
@@ -212,15 +212,15 @@ async function handleLogin() {
  */
 function handlePublicMode() {
     log('Public mode button clicked');
-    
+
     // Mark as launched
     localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
     log('Public mode: HAS_LAUNCHED_KEY set to true');
-    
+
     // Clear any stored key (use 'auth_key' to match website expectations)
     sessionStorage.removeItem('auth_key');
     log('Public mode: Cleared any stored auth key');
-    
+
     // Navigate to task website
     navigateToTaskWebsite();
 }
@@ -235,13 +235,13 @@ function navigateToTaskWebsite() {
     log('Timestamp:', new Date().toISOString());
     log('Auth key present:', !!sessionStorage.getItem('auth_key'));
     log('═══════════════════════════════════════');
-    
+
     // Show loading screen briefly
     landingScreen.style.display = 'none';
     loadingScreen.style.display = 'flex';
-    
+
     log('Loading screen displayed');
-    
+
     // Navigate after a brief moment to show loading state
     setTimeout(() => {
         log('Executing navigation...');

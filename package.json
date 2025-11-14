@@ -13,6 +13,11 @@
     "generate-icons": "node scripts/generate-icons.js",
     "bump-version": "node scripts/bump-version.js && git add android/app/build.gradle",
     "prepare": "husky",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "lint:js": "eslint www/**/*.js",
+    "lint:css": "stylelint www/**/*.css",
+    "lint:html": "htmlhint www/**/*.html",
+    "lint:fix": "eslint www/**/*.js --fix && stylelint www/**/*.css --fix",
     "release": "node scripts/release.js",
     "release:patch": "npm version patch --no-git-tag-version && npm run release",
     "release:minor": "npm version minor --no-git-tag-version && npm run release",
@@ -26,15 +31,20 @@
   "author": "Hadoku",
   "license": "MIT",
   "dependencies": {
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0"
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/core": "^7.4.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^6.0.0",
+    "@capacitor/cli": "^7.4.4",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "htmlhint": "^1.7.1",
     "http-server": "^14.1.1",
     "husky": "^9.1.7",
-    "sharp": "^0.34.4",
+    "sharp": "^0.34.5",
+    "stylelint": "^16.25.0",
+    "stylelint-config-standard": "^39.0.1",
     "typescript": "^5.9.3"
   }
 }

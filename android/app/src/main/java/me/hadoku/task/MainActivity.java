@@ -2,29 +2,27 @@ package me.hadoku.task;
 
 import android.os.Bundle;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
 
-        // Get the WebView and set a custom WebViewClient to inject URL tracking
+        // Get the WebView and inject URL tracking for hadoku.me pages
         WebView webView = this.bridge.getWebView();
         if (webView != null) {
-            webView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    super.onPageFinished(view, url);
-
-                    // Inject URL tracker script when loading hadoku.me pages
+            // Use evaluateJavascript to check if we're on hadoku.me and inject tracker
+            webView.evaluateJavascript(
+                "(function() { return window.location.href; })();",
+                url -> {
                     if (url != null && url.contains("hadoku.me")) {
-                        injectUrlTracker(view);
+                        injectUrlTracker(webView);
                     }
                 }
-            });
+            );
         }
     }
 

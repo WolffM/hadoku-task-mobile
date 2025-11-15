@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Tasks',
   webDir: 'www',
   server: {
-    androidScheme: 'https'
+    hostname: 'localhost',
+    androidScheme: 'https',
+    iosScheme: 'capacitor'
   },
   android: {
     allowMixedContent: false,

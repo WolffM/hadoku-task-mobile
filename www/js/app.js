@@ -102,9 +102,10 @@ async function validateKey(key) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Hadoku-App': 'mobile-android'
-                },
-                data: { key }
+                    'X-Hadoku-App': 'mobile-android',
+                    'X-User-Key': key  // ✅ Key goes in header, not body!
+                }
+                // No data/body needed - key is in header
             };
 
             log('📤 Request config:', JSON.stringify(requestConfig, null, 2));
@@ -124,9 +125,10 @@ async function validateKey(key) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Hadoku-App': 'mobile-android'
-                },
-                body: JSON.stringify({ key })
+                    'X-Hadoku-App': 'mobile-android',
+                    'X-User-Key': key  // ✅ Key goes in header, not body!
+                }
+                // No body needed - key is in header
             });
 
             log('📥 Fetch response status:', response.status, response.statusText);
@@ -191,10 +193,12 @@ async function handleLogin() {
         localStorage.setItem(HAS_LAUNCHED_KEY, 'true');
         log('Login: HAS_LAUNCHED_KEY set to true');
 
-        // Store the key in sessionStorage for the website to read
-        // Website expects 'auth_key' as per mobile integration docs
+        // Store the key in BOTH sessionStorage AND localStorage
+        // localStorage persists across app restarts/crashes
+        // sessionStorage is for the current session
         sessionStorage.setItem('auth_key', key);
-        log('Login: Stored auth_key in sessionStorage');
+        localStorage.setItem('auth_key', key);
+        log('Login: Stored auth_key in sessionStorage and localStorage');
 
         // Navigate to task website
         navigateToTaskWebsite();
@@ -231,9 +235,28 @@ function handlePublicMode() {
  */
 function navigateToTaskWebsite() {
     log('═══════════════════════════════════════');
-    log('📱 NAVIGATING TO:', HADOKU_TASK_URL);
+    
+    // Restore auth key from localStorage if not in sessionStorage
+    // (happens after app crash/restart)
+    const sessionKey = sessionStorage.getItem('auth_key');
+    const localKey = localStorage.getItem('auth_key');
+    
+    if (!sessionKey && localKey) {
+        log('🔄 Restoring auth_key from localStorage to sessionStorage');
+        sessionStorage.setItem('auth_key', localKey);
+    }
+    
+    const authKey = sessionStorage.getItem('auth_key') || localKey;
+    
+    // Build URL with auth key as query parameter
+    // The website will read it from the URL since sessionStorage doesn't cross domains
+    const url = authKey 
+        ? `https://hadoku.me/task/?mobile=true&key=${encodeURIComponent(authKey)}`
+        : 'https://hadoku.me/task/?mobile=true';
+    
+    log('📱 NAVIGATING TO:', url.replace(authKey || '', '***KEY***')); // Hide key in logs
     log('Timestamp:', new Date().toISOString());
-    log('Auth key present:', !!sessionStorage.getItem('auth_key'));
+    log('Auth key present:', !!authKey);
     log('═══════════════════════════════════════');
 
     // Show loading screen briefly
@@ -242,10 +265,24 @@ function navigateToTaskWebsite() {
 
     log('Loading screen displayed');
 
+    // Set a timeout to show landing screen if navigation fails
+    const navigationTimeout = setTimeout(() => {
+        log('⚠️ Navigation timeout - showing landing screen as fallback');
+        landingScreen.style.display = 'flex';
+        loadingScreen.style.display = 'none';
+        // Clear the "has launched" flag so user can try again
+        localStorage.removeItem(HAS_LAUNCHED_KEY);
+    }, 10000); // 10 second timeout
+
+    // Clear timeout if page starts unloading (navigation succeeded)
+    window.addEventListener('beforeunload', () => {
+        clearTimeout(navigationTimeout);
+    }, { once: true });
+
     // Navigate after a brief moment to show loading state
     setTimeout(() => {
         log('Executing navigation...');
-        window.location.href = HADOKU_TASK_URL;
+        window.location.href = url;
     }, 300);
 }
 
@@ -277,6 +314,24 @@ window.addEventListener('unhandledrejection', (event) => {
 // Log when app goes to background/foreground
 document.addEventListener('visibilitychange', () => {
     log('� Visibility changed:', document.hidden ? 'HIDDEN (background)' : 'VISIBLE (foreground)');
+    
+    // If app comes back to foreground and we're stuck on loading screen, retry navigation
+    if (!document.hidden && loadingScreen && loadingScreen.style.display === 'flex') {
+        log('⚠️ App resumed while on loading screen - checking if navigation is needed');
+        
+        // Check if we should be navigated to the website
+        const hasLaunched = localStorage.getItem(HAS_LAUNCHED_KEY);
+        const authKey = localStorage.getItem('auth_key');
+        
+        if (hasLaunched && authKey) {
+            log('🔄 Re-attempting navigation after app resume');
+            // Small delay to ensure app is fully resumed
+            setTimeout(() => {
+                const url = `https://hadoku.me/task/?mobile=true&key=${encodeURIComponent(authKey)}`;
+                window.location.href = url;
+            }, 500);
+        }
+    }
 });
 
 log('Global error handlers and lifecycle listeners attached');

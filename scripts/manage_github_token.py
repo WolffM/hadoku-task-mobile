@@ -81,6 +81,10 @@ from typing import List, Optional, Dict, Any
 # GitHub OAuth App Client ID (official GitHub CLI client ID)
 CLIENT_ID = "178c6fc778ccc68e1d6a"
 
+# Request timeout in seconds (prevents indefinite hanging - CWE-400)
+# 30 seconds is sufficient for GitHub API calls while preventing resource exhaustion
+REQUEST_TIMEOUT = 30
+
 # Secret configurations
 SECRET_CONFIGS = {
     'child-repos': {
@@ -200,7 +204,8 @@ class GitHubTokenManager:
             print("  🧪 Testing HADOKU_SITE_TOKEN validity...")
             response = requests.get(
                 "https://api.github.com/user",
-                headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=REQUEST_TIMEOUT
             )
             
             if response.status_code != 200:
@@ -221,7 +226,8 @@ class GitHubTokenManager:
             test_repo = self.config['repos'][0]
             response = requests.get(
                 f"https://api.github.com/repos/{test_repo}",
-                headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=REQUEST_TIMEOUT
             )
             
             if response.status_code != 200:
@@ -275,7 +281,8 @@ class GitHubTokenManager:
         response = requests.post(
             device_url,
             headers={"Accept": "application/json"},
-            data={"client_id": CLIENT_ID, "scope": "repo"}
+            data={"client_id": CLIENT_ID, "scope": "repo"},
+            timeout=REQUEST_TIMEOUT
         )
         
         if response.status_code != 200:
@@ -304,7 +311,8 @@ class GitHubTokenManager:
                     "client_id": CLIENT_ID,
                     "device_code": device_code,
                     "grant_type": "urn:ietf:params:oauth:grant-type:device_code"
-                }
+                },
+                timeout=REQUEST_TIMEOUT
             )
             
             result = response.json()

@@ -81,7 +81,8 @@ from typing import List, Optional, Dict, Any
 # GitHub OAuth App Client ID (official GitHub CLI client ID)
 CLIENT_ID = "178c6fc778ccc68e1d6a"
 
-# Request timeout in seconds (prevents indefinite hanging)
+# Request timeout in seconds (prevents indefinite hanging - CWE-400)
+# 30 seconds is sufficient for GitHub API calls while preventing resource exhaustion
 REQUEST_TIMEOUT = 30
 
 # Secret configurations

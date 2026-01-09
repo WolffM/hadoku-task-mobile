@@ -19,6 +19,10 @@ import subprocess
 import os
 from pathlib import Path
 import argparse
+import base64
+import json
+import time
+from typing import List, Optional, Dict, Any
 
 # Check if we're running in a virtual environment
 def is_venv():
@@ -66,13 +70,9 @@ def bootstrap():
 # Run bootstrap
 bootstrap()
 
-# Now we can safely import the dependencies
+# Now we can safely import the external dependencies
 import requests  # noqa: E402
-import base64  # noqa: E402
-import json  # noqa: E402
-import time  # noqa: E402
 from nacl import encoding, public  # noqa: E402
-from typing import List, Optional, Dict, Any  # noqa: E402
 
 # ============================================================================
 # Configuration

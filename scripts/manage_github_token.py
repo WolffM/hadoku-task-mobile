@@ -330,7 +330,7 @@ class GitHubTokenManager:
                 continue
             else:
                 print(f"❌ Authentication failed: {result.get('error_description', result.get('error'))}")
-                return None
+                return False
     
     def setup_session(self):
         """Setup requests session with authentication."""

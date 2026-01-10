@@ -50,7 +50,7 @@ def bootstrap():
     
     # If not in venv, restart script with venv python
     if not is_venv():
-        print(f"🔄 Restarting in virtual environment...")
+        print("🔄 Restarting in virtual environment...")
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)
         sys.exit(0)
     
@@ -164,7 +164,7 @@ class GitHubTokenManager:
     
     def step1_check_token(self) -> bool:
         """Step 1: Check if secrets exist in .env file."""
-        print(f"🔍 Step 1: Checking for secrets in .env file...")
+        print("🔍 Step 1: Checking for secrets in .env file...")
         print(f"  Mode: {self.mode} ({self.config['description']})")
         
         env = self.load_env()
@@ -187,7 +187,7 @@ class GitHubTokenManager:
         
         if missing_secrets:
             print(f"❌ Missing secrets: {', '.join(missing_secrets)}")
-            print(f"Please add them to your .env file")
+            print("Please add them to your .env file")
             return False
         
         print(f"✅ All {len(self.config['secrets'])} secrets found")
@@ -245,7 +245,7 @@ class GitHubTokenManager:
             
             if 'ROUTE_CONFIG' in self.secret_values:
                 route_config = self.secret_values['ROUTE_CONFIG']
-                print(f"  🧪 Validating ROUTE_CONFIG JSON structure...")
+                print("  🧪 Validating ROUTE_CONFIG JSON structure...")
                 try:
                     import json
                     config_data = json.loads(route_config)
@@ -270,7 +270,7 @@ class GitHubTokenManager:
                         print(f"  ❌ {key_name} is not valid JSON: {e}")
                         return False
         
-        print(f"✅ Validation complete")
+        print("✅ Validation complete")
         return True
     
     def authenticate_github(self) -> bool:
@@ -365,7 +365,7 @@ class GitHubTokenManager:
             
             try:
                 # Get public key for this repo
-                print(f"    📥 Getting public key...")
+                print("    📥 Getting public key...")
                 url = f"https://api.github.com/repos/{repo}/actions/secrets/public-key"
                 response = self.session.get(url)
                 response.raise_for_status()
@@ -406,7 +406,7 @@ class GitHubTokenManager:
         target_repos = self.config['repos']
         secret_names = self.config['secrets']
         
-        print(f"\n🔍 Step 5: Verifying secret updates...")
+        print("\n🔍 Step 5: Verifying secret updates...")
         
         total_operations = len(target_repos) * len(secret_names)
         verified_count = 0

@@ -20,9 +20,9 @@ import os
 from pathlib import Path
 import argparse
 import base64
-import json
 import time
-from typing import List, Optional, Dict, Any
+from typing import Dict
+import importlib.util
 
 # Check if we're running in a virtual environment
 def is_venv():
@@ -55,11 +55,12 @@ def bootstrap():
         sys.exit(0)
     
     # Check if dependencies are installed
-    try:
-        import requests
-        import nacl
+    requests_spec = importlib.util.find_spec("requests")
+    nacl_spec = importlib.util.find_spec("nacl")
+    
+    if requests_spec is not None and nacl_spec is not None:
         print("✅ Dependencies already installed")
-    except ImportError:
+    else:
         print("📦 Installing dependencies...")
         subprocess.run([str(venv_pip), 'install', 'requests', 'PyNaCl'], check=True)
         print("✅ Dependencies installed")
@@ -72,7 +73,7 @@ bootstrap()
 
 # Now we can safely import the external dependencies
 import requests  # noqa: E402
-from nacl import encoding, public  # noqa: E402
+from nacl import public  # noqa: E402
 
 # ============================================================================
 # Configuration

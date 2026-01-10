@@ -1,0 +1,7 @@
+# Dependencies for manage_github_token.py
+# These are auto-installed by the bootstrap() function in the script
+requests
+PyNaCl
+
+# Type stubs for mypy static analysis
+types-requests

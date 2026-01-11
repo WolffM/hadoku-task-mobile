@@ -62,7 +62,7 @@ def bootstrap():
         print("✅ Dependencies already installed")
     else:
         print("📦 Installing dependencies...")
-        subprocess.run([str(venv_pip), 'install', 'requests', 'PyNaCl'], check=True)
+        subprocess.run([str(venv_pip), 'install', 'requests', 'PyNaCl', 'types-requests'], check=True)
         print("✅ Dependencies installed")
         print("🔄 Restarting to load new dependencies...")
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)

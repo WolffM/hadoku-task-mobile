@@ -301,7 +301,8 @@ class GitHubTokenManager:
         print("\nWaiting for authorization (press Ctrl+C to cancel)...")
         
         # Step 2: Poll for access token
-        token_url = "https://github.com/login/oauth/access_token"
+        # This is a GitHub OAuth API endpoint URL, not a hardcoded password/token
+        token_url = "https://github.com/login/oauth/access_token"  # nosec B105
         while True:
             time.sleep(interval)
             

@@ -1,9 +1,7 @@
 package me.hadoku.task;
 
-import android.os.Bundle;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
-import com.getcapacitor.Bridge;
 
 public class MainActivity extends BridgeActivity {
 

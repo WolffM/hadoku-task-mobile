@@ -77,7 +77,7 @@ Add this badge to your README.md:
 
 **Want signed release APK?**
 - Need to add keystore as GitHub secret
-- See: https://docs.github.com/en/actions/security-guides/encrypted-secrets
+- See: <https://docs.github.com/en/actions/security-guides/encrypted-secrets>
 
 ### Manual Build (If Needed)
 

@@ -112,8 +112,8 @@ npm run android:install
 - Open Chrome DevTools for WebView (in Android Studio)
 
 **Can't build:**
-- Install JDK 17+ from https://adoptium.net/
-- Install Android Studio from https://developer.android.com/studio
+- Install JDK 17+ from <https://adoptium.net/>
+- Install Android Studio from <https://developer.android.com/studio>
 - Run `npx cap sync` again
 
 **WebView not loading:**

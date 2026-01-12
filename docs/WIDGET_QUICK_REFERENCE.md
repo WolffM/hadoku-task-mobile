@@ -1,6 +1,6 @@
 # Android Widget Quick Reference
 
-**Quick guide for implementing the Hadoku Task home screen widget**
+## Quick guide for implementing the Hadoku Task home screen widget
 
 ---
 

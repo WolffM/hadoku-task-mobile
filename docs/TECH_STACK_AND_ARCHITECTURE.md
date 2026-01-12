@@ -1,6 +1,6 @@
 # Hadoku Task - Tech Stack & Architecture
 
-**Complete technical overview of the Hadoku Task ecosystem**
+## Complete technical overview of the Hadoku Task ecosystem
 
 **Date:** October 15, 2025
 

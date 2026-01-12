@@ -15,7 +15,7 @@ Usage:
 """
 
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess usage is safe: all calls use list arguments without shell=True, and arguments are from controlled sources (sys.executable, __file__, hardcoded strings, validated paths)
 import os
 from pathlib import Path
 import argparse
@@ -51,6 +51,8 @@ def bootstrap():
     # If not in venv, restart script with venv python
     if not is_venv():
         print("🔄 Restarting in virtual environment...")
+        # Safe: venv_python is a controlled Path object, __file__ is script path, sys.argv[1:] are CLI args
+        # Arguments are passed as a list (not shell), preventing command injection
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)
         sys.exit(0)
     
@@ -65,6 +67,8 @@ def bootstrap():
         subprocess.run([str(venv_pip), 'install', 'requests', 'PyNaCl', 'types-requests'], check=True)
         print("✅ Dependencies installed")
         print("🔄 Restarting to load new dependencies...")
+        # Safe: venv_python is a controlled Path object, __file__ is script path, sys.argv[1:] are CLI args
+        # Arguments are passed as a list (not shell), preventing command injection
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)
         sys.exit(0)
 

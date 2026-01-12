@@ -12,10 +12,17 @@ Usage:
   python manage_github_token.py                    # Update HADOKU_SITE_TOKEN in child repos
   python manage_github_token.py --mode=cloudflare  # Update Cloudflare secrets in hadoku_site
   python manage_github_token.py --mode=all         # Update all secrets
+
+Security Note:
+  This script uses subprocess.run() to manage the virtual environment bootstrap process.
+  All subprocess calls are safe:
+  - Uses list arguments (not shell=True) to prevent command injection
+  - Arguments are from controlled sources only (sys.executable, __file__, hardcoded strings, Path objects)
+  - sys.argv pass-through is safe as arguments remain as list elements, not concatenated into shell commands
 """
 
 import sys
-import subprocess
+import subprocess  # nosec B404 - Safe usage: list args, no shell=True, controlled sources only
 import os
 from pathlib import Path
 import argparse

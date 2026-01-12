@@ -93,7 +93,7 @@ APK will be in: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## 🎉 That's It!
+## 🎉 That's It
 
 Now every time you push code, GitHub builds your APK automatically. No Android Studio needed on your machine!
 

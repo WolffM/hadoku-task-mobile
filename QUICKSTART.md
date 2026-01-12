@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-## ✅ Project Setup Complete!
+## ✅ Project Setup Complete
 
 Your Hadoku Task Mobile project is ready to go. Here's what we've set up:
 
@@ -142,7 +142,7 @@ If you want to add an Android home screen widget later, see:
 
 ---
 
-## 🚀 Ready to Build!
+## 🚀 Ready to Build
 
 Run this command to get started:
 

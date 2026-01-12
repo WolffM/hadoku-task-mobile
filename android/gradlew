@@ -70,7 +70,7 @@ app_path=$0
 # Need this for daisy-chained symlinks.
 while
     APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
-    [ -h "$app_path" ]
+    [ -h "${app_path}" ]
 do
     ls=$( ls -ld "$app_path" )
     link=${ls#*' -> '}
@@ -111,14 +111,14 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
+CLASSPATH=${APP_HOME}/gradle/wrapper/gradle-wrapper.jar
 
 
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
         # IBM's JDK on AIX uses strange locations for the executables
-        JAVACMD=$JAVA_HOME/jre/sh/java
+        JAVACMD=${JAVA_HOME}/jre/sh/java
     else
         JAVACMD=$JAVA_HOME/bin/java
     fi
@@ -140,7 +140,7 @@ location of your Java installation."
 fi
 
 # Increase the maximum file descriptors if we can.
-if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
+if ! "${cygwin}" && ! "${darwin}" && ! "${nonstop}" ; then
     case $MAX_FD in #(
       max*)
         # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
@@ -167,7 +167,7 @@ fi
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
 
 # For Cygwin or MSYS, switch paths to Windows format before running java
-if "$cygwin" || "$msys" ; then
+if "${cygwin}" || "${msys}" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
 
@@ -179,7 +179,7 @@ if "$cygwin" || "$msys" ; then
             case $arg in                                #(
               -*)   false ;;                            # don't mess with options #(
               /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
-                    [ -e "$t" ] ;;                      #(
+                    [ -e "${t}" ] ;;                      #(
               *)    false ;;
             esac
         then
@@ -208,7 +208,7 @@ DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 #   * put everything else in single quotes, so that it's not re-expanded.
 
 set -- \
-        "-Dorg.gradle.appname=$APP_BASE_NAME" \
+        "-Dorg.gradle.appname=${APP_BASE_NAME}" \
         -classpath "$CLASSPATH" \
         org.gradle.wrapper.GradleWrapperMain \
         "$@"
@@ -239,7 +239,7 @@ fi
 #
 
 eval "set -- $(
-        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
+        printf '%s\n' "${DEFAULT_JVM_OPTS} ${JAVA_OPTS} ${GRADLE_OPTS}" |
         xargs -n1 |
         sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
         tr '\n' ' ' || true

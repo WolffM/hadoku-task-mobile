@@ -12,10 +12,17 @@ Usage:
   python manage_github_token.py                    # Update HADOKU_SITE_TOKEN in child repos
   python manage_github_token.py --mode=cloudflare  # Update Cloudflare secrets in hadoku_site
   python manage_github_token.py --mode=all         # Update all secrets
+
+Security Note:
+  This script uses subprocess.run() to manage the virtual environment bootstrap process.
+  All subprocess calls are safe:
+  - Uses list arguments (not shell=True) to prevent command injection
+  - Arguments are from controlled sources only (sys.executable, __file__, hardcoded strings, Path objects)
+  - sys.argv pass-through is safe as arguments remain as list elements, not concatenated into shell commands
 """
 
 import sys
-import subprocess  # nosec B404 - subprocess usage is safe: all calls use list arguments without shell=True, and arguments are from controlled sources (sys.executable, __file__, hardcoded strings, validated paths)
+import subprocess  # nosec B404 - Safe usage: list args, no shell=True, controlled sources only
 import os
 from pathlib import Path
 import argparse
@@ -51,8 +58,6 @@ def bootstrap():
     # If not in venv, restart script with venv python
     if not is_venv():
         print("🔄 Restarting in virtual environment...")
-        # Safe: venv_python is a controlled Path object, __file__ is script path, sys.argv[1:] are CLI args
-        # Arguments are passed as a list (not shell), preventing command injection
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)
         sys.exit(0)
     
@@ -67,8 +72,6 @@ def bootstrap():
         subprocess.run([str(venv_pip), 'install', 'requests', 'PyNaCl', 'types-requests'], check=True)
         print("✅ Dependencies installed")
         print("🔄 Restarting to load new dependencies...")
-        # Safe: venv_python is a controlled Path object, __file__ is script path, sys.argv[1:] are CLI args
-        # Arguments are passed as a list (not shell), preventing command injection
         subprocess.run([str(venv_python), __file__] + sys.argv[1:], check=True)
         sys.exit(0)
 

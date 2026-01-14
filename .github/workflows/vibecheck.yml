@@ -1,17 +1,11 @@
-# vibeCheck Workflow
-#
-# This workflow runs vibeCheck static analysis on your repository.
-# For more info: https://github.com/WolffM/vibecheck
-
 name: vibeCheck
-
 on:
-  # Manual trigger only - run via Actions tab
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   issues: write
+  pull-requests: write
   security-events: write
 
 jobs:
@@ -29,5 +23,17 @@ jobs:
         uses: WolffM/vibecheck@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          severity_threshold: low
+          cadence: weekly
+          severity_threshold: medium
           confidence_threshold: medium
+          skip_issues: false
+          autofix_prs: true
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vibecheck-results
+          path: .vibecheck-output/
+          retention-days: 14
+          if-no-files-found: ignore

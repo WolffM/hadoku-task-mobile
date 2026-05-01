@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Landing page for key entry -->
     <div id="landing-screen" class="screen">
         <div class="container">
             <div class="logo">
@@ -18,41 +17,17 @@
             </div>
 
             <div class="auth-form">
-                <label for="access-key">Access Key</label>
-                <input 
-                    type="text" 
-                    id="access-key" 
-                    placeholder="Enter your access key"
-                    autocomplete="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                />
-                
-                <button id="login-btn" class="btn-primary">
-                    Continue
+                <button id="signin-btn" class="btn-primary">
+                    Sign in
                 </button>
 
-                <button id="public-mode-btn" class="btn-secondary">
-                    Try Public Mode
+                <button id="skip-btn" class="btn-secondary">
+                    Continue without signing in
                 </button>
-            </div>
-
-            <div class="help-text">
-                <p>Get your access key from hadoku 😊</p>
             </div>
         </div>
     </div>
 
-    <!-- Loading screen -->
-    <div id="loading-screen" class="screen" style="display: none;">
-        <div class="container">
-            <div class="spinner"></div>
-            <p class="loading-text">Loading Hadoku Task...</p>
-        </div>
-    </div>
-
-    <!-- Capacitor scripts (must load before app.js) -->
-    <script src="cordova.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

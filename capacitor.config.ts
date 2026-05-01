@@ -5,18 +5,12 @@ const config: CapacitorConfig = {
   appName: 'Tasks',
   webDir: 'www',
   server: {
-    hostname: 'localhost',
-    androidScheme: 'https',
-    iosScheme: 'capacitor'
+    url: 'https://hadoku.me/task/',
+    androidScheme: 'https'
   },
   android: {
     allowMixedContent: false,
     appendUserAgent: 'HadokuTaskApp/3.0'
-  },
-  plugins: {
-    CapacitorHttp: {
-      enabled: true
-    }
   }
 };
 

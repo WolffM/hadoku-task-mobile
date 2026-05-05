@@ -32,6 +32,31 @@ pnpm bump-version      # bump android/app/build.gradle versionCode/versionName
 - **Tutorial**: `../hadoku_site/docs/child-apps/USING_VAULT.md`. Operational reference: `../hadoku_site/docs/operations/SECRETS.md`.
 - **Auth model**: 1:1 named user-keys. See `../hadoku_site/docs/planning/next-work.md`.
 
+## Vault — what your service-tier key can and can't do
+
+You (or any agent) on this repo run dev commands with `HADOKU_VAULT_KEY` in env (populated from `~/.bashrc` / Windows env). That's a **service-tier** key. Tier-gate landed 2026-05-04.
+
+CAN do (no operator needed):
+
+- `GET /api/secrets/status` — sealed/unlocked check
+- `GET /api/secrets/get/:key` — fetch a value declared in `.devvault.json`
+- Verify with: `node ../hadoku_site/scripts/secrets/dev-vault.mjs --check`
+
+CANNOT do (returns `403 admin tier required` — by design, not a bug):
+
+- `POST /api/secrets/admin/set-many` — adding/changing secrets
+- `POST /api/secrets/admin/lock` — sealing the vault
+- `GET /api/secrets/list` — enumerating every secret name
+- `GET /api/secrets/audit` — dead-key report
+
+If you need any of those, **ask the operator**. They use `HADOKU_ADMIN_KEY` and run `python scripts/administration.py …` from the `hadoku_site` repo. Don't try to escalate by overwriting `ADMIN_KEYS` — that path is closed.
+
+If your code reads a new `process.env.X` that isn't in `.devvault.json` yet:
+
+1. Add the mapping to `.devvault.json` (commit-safe, no values).
+2. Tell the operator the vault key name + value to set.
+3. Re-run your dev command.
+
 ## Does NOT
 
 - Does NOT contain task-app source (that lives in `../hadoku-task/` and is loaded via mf-loader at runtime)

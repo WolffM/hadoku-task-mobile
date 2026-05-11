@@ -11,7 +11,7 @@ permissions:
 jobs:
   analyze:
     name: Static Analysis
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, hadoku-builder]
 
     steps:
       - name: Checkout repository

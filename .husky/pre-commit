@@ -1,1 +1,1 @@
-npm run bump-version
+pnpm run bump-version

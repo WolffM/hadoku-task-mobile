@@ -4,24 +4,24 @@
   "description": "Hadoku Task Mobile - Android APK wrapper",
   "main": "index.js",
   "scripts": {
-    "dev": "npx http-server www -p 8080 -o",
+    "dev": "pnpm exec http-server www -p 8080 -o",
     "build": "echo 'No build needed - static HTML'",
-    "sync": "npx cap sync",
-    "open:android": "npx cap open android",
-    "android:build": "cd android && gradlew assembleDebug",
-    "android:install": "cd android && gradlew installDebug",
+    "sync": "pnpm exec cap sync",
+    "open:android": "pnpm exec cap open android",
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "android:install": "cd android && ./gradlew installDebug",
     "generate-icons": "node scripts/generate-icons.js",
     "bump-version": "node scripts/bump-version.js && git add android/app/build.gradle",
     "prepare": "husky",
-    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "lint": "pnpm run lint:js && pnpm run lint:css && pnpm run lint:html",
     "lint:js": "eslint www/**/*.js",
     "lint:css": "stylelint www/**/*.css",
     "lint:html": "htmlhint www/**/*.html",
     "lint:fix": "eslint www/**/*.js --fix && stylelint www/**/*.css --fix",
     "release": "node scripts/release.js",
-    "release:patch": "npm version patch --no-git-tag-version && npm run release",
-    "release:minor": "npm version minor --no-git-tag-version && npm run release",
-    "release:major": "npm version major --no-git-tag-version && npm run release"
+    "release:patch": "pnpm version patch --no-git-tag-version && pnpm run release",
+    "release:minor": "pnpm version minor --no-git-tag-version && pnpm run release",
+    "release:major": "pnpm version major --no-git-tag-version && pnpm run release"
   },
   "keywords": [
     "capacitor",
@@ -30,6 +30,7 @@
   ],
   "author": "Hadoku",
   "license": "MIT",
+  "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
   "dependencies": {
     "@capacitor/android": "^7.4.4",
     "@capacitor/core": "^7.4.4"

@@ -31,7 +31,7 @@ async function generateIcons() {
     }
   }
 
-  console.log('\n🎉 Done! Run `npx cap sync` to apply changes.');
+  console.log('\n🎉 Done! Run `pnpm run sync` to apply changes.');
 }
 
 generateIcons().catch(console.error);

@@ -21,7 +21,7 @@ try {
 
     // Commit version change
     console.log('📝 Committing version change...');
-    execSync('git add package.json package-lock.json', { stdio: 'inherit' });
+    execSync('git add package.json pnpm-lock.yaml', { stdio: 'inherit' });
     execSync(`git commit -m "Release v${version}"`, { stdio: 'inherit' });
     
     // Push commit

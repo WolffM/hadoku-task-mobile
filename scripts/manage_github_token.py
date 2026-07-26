@@ -121,8 +121,6 @@ SECRET_CONFIGS = {
             'CLOUDFLARE_API_TOKEN', 
             'CLOUDFLARE_WORKER_FLUSH_TOKEN', 
             'ROUTE_CONFIG', 
-            'ADMIN_KEYS',      # JSON object: maps keys to userIds for backend validation
-            'FRIEND_KEYS',     # JSON object: maps keys to userIds for backend validation
             'TASK_GITHUB_TOKEN', 
             'DEPLOY_PACKAGE_TOKEN'
         ],
@@ -131,8 +129,6 @@ SECRET_CONFIGS = {
         ],
         # Map .env names to GitHub Secret names
         'secret_mapping': {
-            'ADMIN_KEYS': 'ADMIN_KEYS',
-            'FRIEND_KEYS': 'FRIEND_KEYS',
             'TASK_GITHUB_TOKEN': 'HADOKU_SITE_TOKEN',
             'DEPLOY_PACKAGE_TOKEN': 'DEPLOY_PACKAGE_TOKEN'
         }
@@ -261,22 +257,13 @@ class GitHubTokenManager:
                     print(f"  ❌ ROUTE_CONFIG is not valid JSON: {e}")
                     return False
             
-            # Validate ADMIN_KEYS and FRIEND_KEYS JSON structure
-            for key_name in ['ADMIN_KEYS', 'FRIEND_KEYS']:
-                if key_name in self.secret_values:
-                    keys_json = self.secret_values[key_name]
-                    print(f"  🧪 Validating {key_name} JSON structure...")
-                    try:
-                        import json
-                        keys_data = json.loads(keys_json)
-                        if not isinstance(keys_data, dict):
-                            print(f"  ❌ {key_name} must be a JSON object (dict), got {type(keys_data)}")
-                            return False
-                        print(f"  ✅ {key_name} is valid JSON with {len(keys_data)} key(s): {list(keys_data.keys())}")
-                    except json.JSONDecodeError as e:
-                        print(f"  ❌ {key_name} is not valid JSON: {e}")
-                        return False
-        
+            # (Removed: ADMIN_KEYS / FRIEND_KEYS validation. Those arrays were
+            #  retired 2026-07-26 — auth resolves from the edge-router key
+            #  registry and each key is its own KEY_<TIER>_<NAME> vault item, so
+            #  there is nothing to push here as a GitHub secret. The check also
+            #  printed `list(keys_data.keys())`, which for the key->userId object
+            #  shape meant printing the raw keys to stdout.)
+
         print("✅ Validation complete")
         return True
     

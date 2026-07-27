@@ -175,7 +175,7 @@ class GitHubTokenManager:
         secret_mapping = self.config.get('secret_mapping', {})
         
         for secret_name in self.config['secrets']:
-            # Check if there's a mapping (e.g., ADMIN_KEY -> PUBLIC_ADMIN_KEY in .env)
+            # Check if there's a mapping (e.g., TASK_GITHUB_TOKEN -> HADOKU_SITE_TOKEN in .env)
             env_name = secret_mapping.get(secret_name, secret_name)
             secret_value = env.get(env_name, '')
             

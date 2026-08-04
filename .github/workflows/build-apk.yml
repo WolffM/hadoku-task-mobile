@@ -39,7 +39,7 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     - name: Set up JDK 21
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: 21
         distribution: temurin
@@ -51,7 +51,7 @@ jobs:
       run: command -v unzip || (sudo apt-get update && sudo apt-get install -y unzip)
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v4
 
     - name: Sync Capacitor
       run: pnpm exec cap sync android
@@ -75,7 +75,7 @@ jobs:
       run: cp android/app/build/outputs/apk/release/app-release-unsigned.apk android/app/build/outputs/apk/release/hadoku-task.apk || cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/hadoku-task.apk
 
     - name: Upload Release APK
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: hadoku-task-apk
         path: android/app/build/outputs/apk/release/hadoku-task.apk

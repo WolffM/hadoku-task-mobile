@@ -22,7 +22,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     # No `version:` input — action-setup reads pnpm from package.json's
     # `packageManager` field (single source of truth; specifying both errors).
@@ -30,7 +30,7 @@ jobs:
       uses: pnpm/action-setup@v5
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '22'
         cache: pnpm
@@ -75,7 +75,7 @@ jobs:
       run: cp android/app/build/outputs/apk/release/app-release-unsigned.apk android/app/build/outputs/apk/release/hadoku-task.apk || cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/hadoku-task.apk
 
     - name: Upload Release APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: hadoku-task-apk
         path: android/app/build/outputs/apk/release/hadoku-task.apk

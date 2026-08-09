@@ -28,6 +28,8 @@ jobs:
     # `packageManager` field (single source of truth; specifying both errors).
     - name: Set up pnpm
       uses: pnpm/action-setup@v5
+      with:
+        dest: ${{ runner.temp }}/pnpm-${{ github.run_id }}
 
     - name: Set up Node.js
       uses: actions/setup-node@v6

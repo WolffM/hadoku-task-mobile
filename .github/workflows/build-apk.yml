@@ -16,7 +16,7 @@ jobs:
     # `hadoku-builder`, not `hadoku-builder-heavy` — no runner in the pool carries
     # the -heavy label, so every build since the self-hosted migration queued until
     # GitHub cancelled it at the 24h cap.
-    runs-on: [self-hosted, hadoku-builder]
+    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","hadoku-builder"]') }}
     permissions:
       contents: write
 

@@ -13,14 +13,13 @@ permissions: read-all
 
 jobs:
   build:
-    # `hadoku-builder`, not `hadoku-builder-heavy` — no runner in the pool carries
-    # the -heavy label, so every build since the self-hosted migration queued until
-    # GitHub cancelled it at the 24h cap.
-    # Runner SELECTION, not a job-level `if:`. Skipping the job would make a
-    # required check that never reports, so a fork PR could never merge. This
-    # keeps it always-running while an unauthorized fork PR lands on
-    # GitHub-hosted (free here) instead of a claw — a persistent machine on a
-    # home LAN. author_association is computed by GitHub, not the submitter.
+    # `hadoku-builder` is the ONLY runner label now. `hadoku-builder-heavy` was
+    # retired 2026-08-19: it was a RAM pin living on a single claw, so whenever
+    # that one machine was down a build queued until GitHub cancelled it at the
+    # 24h cap — which is exactly what happened to this workflow. If this build
+    # ever does need a big-RAM box, say so as COVERAGE in hadoku_site's
+    # fleet-runner-manifest.json (which claws serve this repo) rather than by
+    # inventing a label: coverage degrades to "run on the other one".
     # Runner SELECTION, not a job-level `if:`. Skipping the job would make a
     # required check that never reports, so a fork PR could never merge. This
     # keeps it always-running while an unauthorized fork PR lands on

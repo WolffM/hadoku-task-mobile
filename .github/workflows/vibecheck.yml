@@ -11,7 +11,7 @@ permissions:
 jobs:
   analyze:
     name: Static Analysis
-    runs-on: ${{ fromJSON(vars.CI_RUNNER || '["self-hosted","hadoku-builder"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -119,7 +119,6 @@ SECRET_CONFIGS = {
         'description': 'Deployment secrets for hadoku_site (Cloudflare Workers)',
         'secrets': [
             'CLOUDFLARE_API_TOKEN', 
-            'CLOUDFLARE_WORKER_FLUSH_TOKEN', 
             'ROUTE_CONFIG', 
             'TASK_GITHUB_TOKEN', 
             'DEPLOY_PACKAGE_TOKEN'
